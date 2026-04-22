@@ -1,0 +1,237 @@
+# ═══════════════════════════════════════════════════════════
+# Khalto — CI/CD Pipeline
+# GitHub Actions: Test → Build → Deploy to Railway
+# ═══════════════════════════════════════════════════════════
+#
+# الملف: .github/workflows/deploy.yml
+# ضعه في: khalto-backend-final/.github/workflows/deploy.yml
+
+name: Khalto API — CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+jobs:
+
+  # ══════════════════════════════════════════════
+  # JOB 1: Lint & Test
+  # ══════════════════════════════════════════════
+  test:
+    name: 🧪 Lint & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB:       khalto_test
+          POSTGRES_USER:     postgres
+          POSTGRES_PASSWORD: test_password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint --if-present
+
+      - name: Run migrations on test DB
+        env:
+          DATABASE_URL: postgresql://postgres:test_password@localhost:5432/khalto_test
+          NODE_ENV:     test
+        run: node src/db/migrate.js
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://postgres:test_password@localhost:5432/khalto_test
+          REDIS_URL:    redis://localhost:6379
+          NODE_ENV:     test
+          JWT_SECRET:   test_jwt_secret_min_32_chars_here
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        run: npm test --if-present
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+
+  # ══════════════════════════════════════════════
+  # JOB 2: Security Scan
+  # ══════════════════════════════════════════════
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  # ══════════════════════════════════════════════
+  # JOB 3: Deploy to Staging
+  # ══════════════════════════════════════════════
+  deploy-staging:
+    name: 🚀 Deploy → Staging
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/staging'
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (Staging)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          railway up --service khalto-api-staging --detach
+          echo "✅ Deployed to staging"
+
+      - name: Run migrations on staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: railway run node src/db/migrate.js --service khalto-api-staging
+
+      - name: Health check
+        run: |
+          sleep 15
+          curl -f ${{ secrets.STAGING_URL }}/health || exit 1
+          echo "✅ Staging health check passed"
+
+      - name: Notify Slack (Staging)
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} Khalto Staging Deploy: ${{ job.status }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ══════════════════════════════════════════════
+  # JOB 4: Deploy to Production
+  # ══════════════════════════════════════════════
+  deploy-production:
+    name: 🚀 Deploy → Production
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    environment: production  # Requires manual approval in GitHub
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (Production)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: |
+          railway up --service khalto-api --detach
+          echo "✅ Deploying to production..."
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Run migrations
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: railway run node src/db/migrate.js --service khalto-api
+
+      - name: Production health check
+        run: |
+          curl -f ${{ secrets.PRODUCTION_URL }}/health || exit 1
+          echo "✅ Production health check passed"
+
+      - name: Create GitHub Release
+        if: success()
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name:     v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body:         |
+            ## Khalto API Release v${{ github.run_number }}
+            - Deployed: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Date: ${{ github.event.head_commit.timestamp }}
+          draft: false
+          prerelease: false
+
+      - name: Notify team (Production)
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '🚀 Production Deploy SUCCESS' || '🚨 Production Deploy FAILED' }}\nVersion: v${{ github.run_number }}\nBy: ${{ github.actor }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+# ═══════════════════════════════════════════════════════════
+# GitHub Secrets المطلوبة:
+# Settings → Secrets → Actions → New repository secret
+#
+# RAILWAY_TOKEN_STAGING    — من Railway → Account Settings → Tokens
+# RAILWAY_TOKEN_PRODUCTION — من Railway → Account Settings → Tokens
+# RAILWAY_PROJECT_ID       — من Railway project URL
+# STAGING_URL              — https://khalto-staging.up.railway.app
+# PRODUCTION_URL           — https://api.khalto.app
+# SLACK_WEBHOOK            — اختياري للإشعارات
+# ═══════════════════════════════════════════════════════════

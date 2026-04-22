@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 /**
  * Khalto — Database Migration Runner
  * شغّله مرة واحدة بعد أول deploy
@@ -8,6 +9,7 @@
  */
 
 require('dotenv').config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const { Client } = require('pg');
 const fs         = require('fs');
 const path       = require('path');
@@ -25,10 +27,12 @@ const migrations = [
 ];
 
 async function migrate() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl:
-      { rejectUnauthorized: false }
+const dbUrl = new URL(process.env.DATABASE_URL);
+dbUrl.searchParams.set('sslmode', 'no-verify');
+
+const client = new Client({
+  connectionString: dbUrl.toString(),
+  ssl: { rejectUnauthorized: false }
       
   });
 
@@ -95,3 +99,4 @@ async function migrate() {
 }
 
 migrate();
+

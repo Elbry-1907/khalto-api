@@ -15,7 +15,7 @@ const fs         = require('fs');
 const path       = require('path');
 
 const migrations = [
-  '../schema.sql',                              // Base schema
+  '../../schema.sql',                             // Base schema
   'migrations/002_fcm_tokens.sql',
   'migrations/003_auth_tables.sql',
   'migrations/004_ads_tables.sql',
@@ -99,4 +99,5 @@ const client = new Client({
 }
 
 migrate();
+
 

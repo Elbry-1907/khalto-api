@@ -1,3 +1,4 @@
+console.log('=== STARTING KHALTO API ===');
 require('dotenv').config();
 const express       = require('express');
 const cors          = require('cors');
@@ -145,6 +146,7 @@ app.use(errorHandler);
 
 // ── Start server ──────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '3000');
+console.log('=== ATTEMPTING LISTEN ON PORT', PORT, '===');
 httpServer.listen(PORT, () => {
   logger.info(`🚀 Khalto API v2.0.0 running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   logger.info(`📋 Routes: ${Object.keys(routes).map(r => `/api/v1/${r}`).join(', ')}`);
@@ -167,3 +169,4 @@ process.on('unhandledRejection', reason => logger.error('Unhandled rejection', {
 process.on('uncaughtException',  err    => { logger.error('Uncaught exception', { err }); process.exit(1); });
 
 module.exports = { app, io };
+

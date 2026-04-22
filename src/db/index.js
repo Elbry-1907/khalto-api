@@ -2,13 +2,16 @@ const knex = require('knex');
 
 const db = knex({
   client: 'pg',
-  connection: {
+  connection: process.env.DATABASE_URL ? {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  } : {
     host:     process.env.DB_HOST     || 'localhost',
     port:     parseInt(process.env.DB_PORT || '5432'),
     database: process.env.DB_NAME     || 'khalto',
     user:     process.env.DB_USER     || 'postgres',
     password: process.env.DB_PASSWORD || '',
-    ssl:      process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl:      false,
   },
   pool: {
     min:            parseInt(process.env.DB_POOL_MIN || '2'),
@@ -23,3 +26,4 @@ db.raw('SELECT 1')
   .catch(err => console.error('❌ Database connection failed:', err.message));
 
 module.exports = db;
+

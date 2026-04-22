@@ -1,7 +1,8 @@
 const sgMail  = require('@sendgrid/mail');
 const logger  = require('../utils/logger');
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || process.env.SMTP_PASS);
+const sgApiKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || "SG.placeholder";
+if (sgApiKey.startsWith("SG.")) { sgMail.setApiKey(sgApiKey); }
 
 const FROM = {
   email: process.env.SMTP_FROM || 'noreply@khalto.app',
@@ -220,3 +221,4 @@ const email = {
 };
 
 module.exports = { sendEmail, email };
+

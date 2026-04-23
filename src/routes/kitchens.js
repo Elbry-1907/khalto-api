@@ -4,7 +4,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
-const { authenticate, requireRole, isAdmin, isOperations } = require('../middleware/auth');
+const { authenticate, requireRole, isAdmin, isAdminOrOps } = require('../middleware/auth');
 
 // GET /kitchens — public browse
 router.get('/', async (req, res, next) => {
@@ -70,7 +70,7 @@ router.patch('/:id', authenticate, async (req, res, next) => {
 });
 
 // POST /kitchens/:id/approve — admin
-router.post('/:id/approve', authenticate, isOperations, async (req, res, next) => {
+router.post('/:id/approve', authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     await db('kitchens').where({ id: req.params.id }).update({
       status: 'active', approved_by: req.user.id, approved_at: new Date()
@@ -80,3 +80,4 @@ router.post('/:id/approve', authenticate, isOperations, async (req, res, next) =
 });
 
 module.exports = router;
+

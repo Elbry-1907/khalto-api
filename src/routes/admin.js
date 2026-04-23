@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
-const { authenticate, isAdmin, isSuperAdmin, isFinance, isOperations } = require('../middleware/auth');
+const { authenticate, isAdmin, isAdminOrOps, isFinance } = require('../middleware/auth');
 
 router.get('/dashboard', authenticate, isAdmin, async (req, res, next) => {
   try {
@@ -50,7 +50,7 @@ router.get('/orders', authenticate, isAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/users', authenticate, isSuperAdmin, async (req, res, next) => {
+router.get('/users', authenticate, isAdmin, async (req, res, next) => {
   try {
     const { role, page=1, limit=50 } = req.query;
     let query = db('users').select('id','role','email','phone','full_name','is_active','created_at')
@@ -61,7 +61,7 @@ router.get('/users', authenticate, isSuperAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/audit-logs', authenticate, isSuperAdmin, async (req, res, next) => {
+router.get('/audit-logs', authenticate, isAdmin, async (req, res, next) => {
   try {
     const { entity_type, actor_id, page=1, limit=50 } = req.query;
     let query = db('audit_logs as a')
@@ -95,7 +95,7 @@ router.get('/reports/financial', authenticate, isFinance, async (req, res, next)
   } catch (err) { next(err); }
 });
 
-router.get('/reports/operations', authenticate, isOperations, async (req, res, next) => {
+router.get('/reports/operations', authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     const { from, to } = req.query;
     let base = db('orders');

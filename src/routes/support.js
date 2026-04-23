@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
-const { authenticate, isAdmin, isSuperAdmin } = require('../middleware/auth');
+const { authenticate, isAdmin } = require('../middleware/auth');
 
 router.post('/tickets', authenticate, async (req, res, next) => {
   try {

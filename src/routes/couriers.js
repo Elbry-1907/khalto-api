@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
-const { authenticate, requireRole, isOperations } = require('../middleware/auth');
+const { authenticate, requireRole, isAdminOrOps } = require('../middleware/auth');
 
 // helper: get courier record for current user
 const getMyCourier = (userId) =>
@@ -201,7 +201,7 @@ router.get('/me/earnings', authenticate, requireRole('courier'), async (req, res
 });
 
 // ── GET /couriers — admin list ──
-router.get('/', authenticate, isOperations, async (req, res, next) => {
+router.get('/', authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     const { status, city_id, availability, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
@@ -223,7 +223,7 @@ router.get('/', authenticate, isOperations, async (req, res, next) => {
 });
 
 // ── POST /couriers/:id/approve ──
-router.post('/:id/approve', authenticate, isOperations, async (req, res, next) => {
+router.post('/:id/approve', authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     await db('couriers').where({ id: req.params.id }).update({
       status: 'active',

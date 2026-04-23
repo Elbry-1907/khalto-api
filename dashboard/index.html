@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Khalto Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #E8603C;
+  --navy:    #1a1a2e;
+  --accent:  #F5A623;
+  --green:   #27AE60;
+  --red:     #E74C3C;
+  --bg:      #F0F4F8;
+  --white:   #FFFFFF;
+  --border:  #E8ECF0;
+  --text:    #1a1a2e;
+  --muted:   #8B95A1;
+  --sidebar-w: 230px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Cairo", sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sb { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; scrollbar-width: none; transition: .3s; }
+.sb::-webkit-scrollbar { display: none; }
+.sb-logo { padding: 18px 16px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 10px; }
+.sb-logo-text { font-family: "Sora", sans-serif; font-size: 20px; font-weight: 800; color: #fff; }
+.sb-logo-text span { color: var(--primary); }
+.sb-badge { font-size: 9px; background: var(--primary); color: #fff; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+.sb-section { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.25); text-transform: uppercase; letter-spacing: 1.2px; padding: 16px 16px 6px; }
+.sb-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; margin: 1px 8px; border-radius: 10px; cursor: pointer; transition: .15s; text-decoration: none; }
+.sb-item:hover { background: rgba(255,255,255,.07); }
+.sb-item.active { background: var(--primary); }
+.sb-item-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.sb-item-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+.sb-item.active .sb-item-label { color: #fff; }
+.sb-item:hover .sb-item-label { color: rgba(255,255,255,.85); }
+.sb-badge-count { margin-right: auto; background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+.sb-item.active .sb-badge-count { background: rgba(255,255,255,.25); }
+
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Topbar */
+.topbar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0; }
+.topbar-title { font-size: 16px; font-weight: 900; color: var(--text); }
+.topbar-right { margin-right: auto; display: flex; align-items: center; gap: 10px; }
+.topbar-search { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 12px; font-family: "Cairo", sans-serif; outline: none; width: 200px; color: var(--text); }
+.topbar-search:focus { border-color: var(--primary); }
+.topbar-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: .15s; }
+.topbar-btn:hover { background: var(--primary); border-color: var(--primary); }
+.topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+.notif-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; position: absolute; top: 6px; left: 6px; }
+.topbar-btn-wrap { position: relative; }
+
+/* Content */
+.content { flex: 1; overflow-y: auto; padding: 20px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* KPI Cards */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-card { background: var(--white); border-radius: 14px; padding: 18px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+.kpi-card::before { content: ""; position: absolute; top: 0; right: 0; width: 4px; height: 100%; border-radius: 0 14px 14px 0; }
+.kpi-card.orange::before { background: var(--primary); }
+.kpi-card.green::before  { background: var(--green); }
+.kpi-card.blue::before   { background: #3498DB; }
+.kpi-card.gold::before   { background: var(--accent); }
+.kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.kpi-icon.orange { background: rgba(232,96,60,.1); }
+.kpi-icon.green  { background: rgba(39,174,96,.1); }
+.kpi-icon.blue   { background: rgba(52,152,219,.1); }
+.kpi-icon.gold   { background: rgba(245,166,35,.1); }
+.kpi-change { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+.kpi-change.up   { background: rgba(39,174,96,.1); color: var(--green); }
+.kpi-change.down { background: rgba(231,76,60,.1); color: var(--red); }
+.kpi-val { font-size: 26px; font-weight: 900; font-family: "Sora", sans-serif; color: var(--text); margin-bottom: 3px; }
+.kpi-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* Charts Row */
+.charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px; }
+.card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+.card-hd { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 13px; font-weight: 800; }
+.card-body { padding: 16px; }
+.card-action { font-size: 11px; font-weight: 700; color: var(--primary); cursor: pointer; }
+
+/* Mini bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; padding-top: 10px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar { width: 100%; border-radius: 6px 6px 0 0; background: var(--primary); transition: .3s; cursor: pointer; min-height: 4px; }
+.bar:hover { opacity: .8; }
+.bar-label { font-size: 9px; color: var(--muted); font-weight: 600; }
+
+/* Donut */
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.donut-svg { width: 120px; height: 120px; }
+.donut-legend { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { flex: 1; color: var(--text); font-weight: 600; }
+.legend-val { font-weight: 800; font-family: "Sora", sans-serif; }
+
+/* Table */
+.table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.table th { background: var(--bg); padding: 10px 12px; text-align: right; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.table td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: rgba(232,96,60,.03); }
+.status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.s-pending    { background: #FFF8E1; color: #F5A623; }
+.s-preparing  { background: #E3F2FD; color: #1976D2; }
+.s-delivered  { background: #E8F5E9; color: #27AE60; }
+.s-cancelled  { background: #FFEBEE; color: #E74C3C; }
+.s-active     { background: #E8F5E9; color: #27AE60; }
+.s-pending-r  { background: #FFF8E1; color: #F5A623; }
+
+/* Bottom grid */
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Loader */
+.loader { display: flex; align-items: center; justify-content: center; height: 80px; color: var(--muted); font-size: 13px; gap: 8px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Live indicator */
+.live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* Alert banner */
+.alert-banner { background: rgba(232,96,60,.08); border: 1px solid rgba(232,96,60,.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+
+/* Empty state */
+.empty { text-align: center; padding: 40px; color: var(--muted); }
+.empty-ico { font-size: 40px; margin-bottom: 10px; }
+.empty-txt { font-size: 13px; font-weight: 600; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 16px; }
+.tab { flex: 1; padding: 7px; text-align: center; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--muted); transition: .15s; }
+.tab.on { background: var(--white); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+/* Responsive */
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } .charts-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<div class="sb" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-text">Khal<span>to</span></div>
+    <div class="sb-badge">Admin</div>
+  </div>
+
+  <div class="sb-section">Operations</div>
+  <a class="sb-item active" onclick="nav('dashboard',this)">
+    <div class="sb-item-icon">📊</div><div class="sb-item-label">Dashboard</div>
+  </a>
+  <a class="sb-item" onclick="nav('orders',this)">
+    <div class="sb-item-icon">📋</div><div class="sb-item-label">الطلبات</div>
+    <div class="sb-badge-count" id="orders-badge">0</div>
+  </a>
+  <a class="sb-item" onclick="nav('kitchens',this)">
+    <div class="sb-item-icon">🍳</div><div class="sb-item-label">المطابخ</div>
+  </a>
+  <a class="sb-item" onclick="nav('couriers',this)">
+    <div class="sb-item-icon">🛵</div><div class="sb-item-label">المندوبين</div>
+  </a>
+  <a class="sb-item" onclick="nav('customers',this)">
+    <div class="sb-item-icon">👤</div><div class="sb-item-label">العملاء</div>
+  </a>
+
+  <div class="sb-section">Finance</div>
+  <a class="sb-item" onclick="nav('payments',this)">
+    <div class="sb-item-icon">💳</div><div class="sb-item-label">المدفوعات</div>
+  </a>
+  <a class="sb-item" onclick="nav('settlements',this)">
+    <div class="sb-item-icon">💰</div><div class="sb-item-label">التسويات</div>
+  </a>
+  <a class="sb-item" onclick="nav('commission',this)">
+    <div class="sb-item-icon">📈</div><div class="sb-item-label">العمولات</div>
+  </a>
+
+  <div class="sb-section">Growth</div>
+  <a class="sb-item" onclick="nav('coupons',this)">
+    <div class="sb-item-icon">🎁</div><div class="sb-item-label">الكوبونات</div>
+  </a>
+  <a class="sb-item" onclick="nav('notifications',this)">
+    <div class="sb-item-icon">🔔</div><div class="sb-item-label">الإشعارات</div>
+  </a>
+
+  <div class="sb-section">Config</div>
+  <a class="sb-item" onclick="nav('branding',this)">
+    <div class="sb-item-icon">🎨</div><div class="sb-item-label">البراندينج</div>
+  </a>
+  <a class="sb-item" onclick="nav('countries',this)">
+    <div class="sb-item-icon">🌍</div><div class="sb-item-label">الدول</div>
+  </a>
+  <a class="sb-item" onclick="nav('settings',this)">
+    <div class="sb-item-icon">⚙️</div><div class="sb-item-label">الإعدادات</div>
+  </a>
+</div>
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-right">
+      <input class="topbar-search" placeholder="🔍 بحث..." id="search-input"/>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
+      <div class="live-dot"></div>
+      <span style="font-size:11px;color:var(--green);font-weight:700">Live</span>
+    </div>
+    <div class="topbar-btn-wrap">
+      <div class="topbar-btn" onclick="loadDashboard()">🔄</div>
+    </div>
+    <div class="topbar-btn-wrap">
+      <div class="topbar-btn">🔔</div>
+      <div class="notif-dot"></div>
+    </div>
+    <div class="topbar-avatar">A</div>
+    <div class="topbar-title" id="page-title">Dashboard</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- API URL Banner -->
+    <div class="alert-banner" id="api-banner">
+      <span>⚡</span>
+      <span>متصل بـ: <strong id="api-url-display">https://khaltoapp-wotek.ondigitalocean.app/api/v1</strong></span>
+      <button onclick="changeApiUrl()" style="margin-right:auto;padding:4px 12px;border-radius:8px;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:Cairo,sans-serif">تغيير</button>
+    </div>
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+
+      <!-- KPIs -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card orange"><div class="kpi-top"><div class="kpi-icon orange">📋</div><div class="kpi-change up" id="kpi-orders-change">+0%</div></div><div class="kpi-val" id="kpi-orders">—</div><div class="kpi-label">إجمالي الطلبات</div></div>
+        <div class="kpi-card green"><div class="kpi-top"><div class="kpi-icon green">👤</div><div class="kpi-change up" id="kpi-users-change">+0%</div></div><div class="kpi-val" id="kpi-users">—</div><div class="kpi-label">العملاء المسجلين</div></div>
+        <div class="kpi-card blue"><div class="kpi-top"><div class="kpi-icon blue">🍳</div><div class="kpi-change up">متاح</div></div><div class="kpi-val" id="kpi-kitchens">—</div><div class="kpi-label">المطابخ النشطة</div></div>
+        <div class="kpi-card gold"><div class="kpi-top"><div class="kpi-icon gold">💰</div><div class="kpi-change up">SAR</div></div><div class="kpi-val" id="kpi-gmv">—</div><div class="kpi-label">إجمالي الإيرادات</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📊 الطلبات آخر 7 أيام</div>
+            <div class="card-action" onclick="loadDashboard()">تحديث</div>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart" id="bar-chart">
+              <div class="loader"><div class="spinner"></div>جاري التحميل...</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">🍳 حالة المطابخ</div></div>
+          <div class="card-body">
+            <div class="donut-wrap">
+              <svg class="donut-svg" viewBox="0 0 120 120" id="donut-svg">
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#f0f4f8" stroke-width="18"/>
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#E8603C" stroke-width="18" stroke-dasharray="0 283" id="donut-active" style="transform:rotate(-90deg);transform-origin:60px 60px;transition:.6s"/>
+                <circle cx="60" cy="60" r="45" fill="none" stroke="#F5A623" stroke-width="18" stroke-dasharray="0 283" id="donut-pending" style="transform:rotate(-90deg);transform-origin:60px 60px;transition:.6s"/>
+                <text x="60" y="65" text-anchor="middle" font-size="18" font-weight="800" font-family="Sora" fill="#1a1a2e" id="donut-center">—</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="legend-row"><div class="legend-dot" style="background:#E8603C"></div><div class="legend-label">نشط</div><div class="legend-val" id="leg-active">0</div></div>
+                <div class="legend-row"><div class="legend-dot" style="background:#F5A623"></div><div class="legend-label">قيد المراجعة</div><div class="legend-val" id="leg-pending">0</div></div>
+                <div class="legend-row"><div class="legend-dot" style="background:#27AE60"></div><div class="legend-label">إجمالي</div><div class="legend-val" id="leg-total">0</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders + Top Kitchens -->
+      <div class="bottom-grid">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📋 آخر الطلبات</div>
+            <div class="card-action" onclick="nav('orders', document.querySelector('.sb-item:nth-child(3)'))">عرض الكل</div>
+          </div>
+          <div id="recent-orders-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">🍳 أحدث المطابخ</div>
+            <div class="card-action" onclick="nav('kitchens', document.querySelector('.sb-item:nth-child(4)'))">عرض الكل</div>
+          </div>
+          <div id="kitchens-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ORDERS PAGE ── -->
+    <div class="page" id="page-orders">
+      <div class="tabs">
+        <div class="tab on" onclick="filterOrders('all',this)">الكل</div>
+        <div class="tab" onclick="filterOrders('awaiting_acceptance',this)">بانتظار القبول</div>
+        <div class="tab" onclick="filterOrders('preparing',this)">قيد التحضير</div>
+        <div class="tab" onclick="filterOrders('delivered',this)">مُسلّم</div>
+        <div class="tab" onclick="filterOrders('cancelled',this)">ملغي</div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📋 جميع الطلبات</div><div class="card-action" onclick="loadOrders()">تحديث</div></div>
+        <div id="orders-full-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- ── KITCHENS PAGE ── -->
+    <div class="page" id="page-kitchens">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🍳 جميع المطابخ</div><div class="card-action" onclick="loadKitchens()">تحديث</div></div>
+        <div id="kitchens-full-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- ── COURIERS PAGE ── -->
+    <div class="page" id="page-couriers">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🛵 جميع المندوبين</div><div class="card-action" onclick="loadCouriers()">تحديث</div></div>
+        <div id="couriers-full-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOMERS PAGE ── -->
+    <div class="page" id="page-customers">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">👤 جميع العملاء</div><div class="card-action" onclick="loadCustomers()">تحديث</div></div>
+        <div id="customers-full-table"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- ── BRANDING PAGE ── -->
+    <div class="page" id="page-branding">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🎨 بيانات البراندينج</div><div class="card-action" onclick="loadBranding()">تحديث</div></div>
+        <div id="branding-content"><div class="loader"><div class="spinner"></div>جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- ── OTHER PAGES ── -->
+    <div class="page" id="page-payments"><div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">صفحة المدفوعات — قريباً</div></div></div>
+    <div class="page" id="page-settlements"><div class="empty"><div class="empty-ico">💰</div><div class="empty-txt">صفحة التسويات — قريباً</div></div></div>
+    <div class="page" id="page-commission"><div class="empty"><div class="empty-ico">📈</div><div class="empty-txt">صفحة العمولات — قريباً</div></div></div>
+    <div class="page" id="page-coupons"><div class="empty"><div class="empty-ico">🎁</div><div class="empty-txt">صفحة الكوبونات — قريباً</div></div></div>
+    <div class="page" id="page-notifications"><div class="empty"><div class="empty-ico">🔔</div><div class="empty-txt">صفحة الإشعارات — قريباً</div></div></div>
+    <div class="page" id="page-countries"><div class="empty"><div class="empty-ico">🌍</div><div class="empty-txt">صفحة الدول — قريباً</div></div></div>
+    <div class="page" id="page-settings"><div class="empty"><div class="empty-ico">⚙️</div><div class="empty-txt">صفحة الإعدادات — قريباً</div></div></div>
+
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+let API = localStorage.getItem('khalto_api') || 'https://khaltoapp-wotek.ondigitalocean.app/api/v1';
+let TOKEN = localStorage.getItem('khalto_token') || '';
+let allOrders = [];
+
+document.getElementById('api-url-display').textContent = API;
+
+function changeApiUrl() {
+  const url = prompt('أدخل API URL:', API);
+  if (url) {
+    API = url.trim();
+    localStorage.setItem('khalto_api', API);
+    document.getElementById('api-url-display').textContent = API;
+    loadDashboard();
+  }
+}
+
+// ── Fetch helper ─────────────────────────────────────────
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', 'X-Mobile-App': 'true' };
+  if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  try {
+    const r = await fetch(API + path, { ...opts, headers: { ...headers, ...(opts.headers||{}) } });
+    return r.json();
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { dashboard:'Dashboard', orders:'الطلبات', kitchens:'المطابخ', couriers:'المندوبين', customers:'العملاء', payments:'المدفوعات', settlements:'التسويات', commission:'العمولات', coupons:'الكوبونات', notifications:'الإشعارات', branding:'البراندينج', countries:'الدول', settings:'الإعدادات' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if (page === 'orders')    loadOrders();
+  if (page === 'kitchens')  loadKitchens();
+  if (page === 'couriers')  loadCouriers();
+  if (page === 'customers') loadCustomers();
+  if (page === 'branding')  loadBranding();
+}
+
+// ── Status helpers ────────────────────────────────────────
+function statusChip(s) {
+  const map = {
+    pending_payment: ['s-pending','بانتظار الدفع'],
+    awaiting_acceptance: ['s-pending','بانتظار القبول'],
+    accepted: ['s-preparing','مقبول'],
+    preparing: ['s-preparing','قيد التحضير'],
+    ready_for_pickup: ['s-preparing','جاهز'],
+    courier_assigned: ['s-preparing','تم التعيين'],
+    picked_up: ['s-preparing','تم الاستلام'],
+    delivered: ['s-delivered','تم التوصيل'],
+    cancelled: ['s-cancelled','ملغي'],
+    refunded: ['s-cancelled','مسترد'],
+    active: ['s-active','نشط'],
+    pending_review: ['s-pending-r','قيد المراجعة'],
+    suspended: ['s-cancelled','موقوف'],
+  };
+  const [cls, label] = map[s] || ['s-pending', s];
+  return `<span class="status-chip ${cls}">${label}</span>`;
+}
+
+function fmt(n) { return n ? Number(n).toLocaleString('ar-SA') : '0'; }
+function fmtDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('ar-SA', {day:'numeric',month:'short'}); }
+
+// ── Dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  // KPIs from health + other endpoints
+  const [health, kitchens, orders, users] = await Promise.all([
+    api('/health').catch(() => ({})),
+    api('/kitchens?limit=100').catch(() => ({})),
+    api('/orders?limit=50').catch(() => ({})),
+    api('/users?limit=100').catch(() => ({})),
+  ]);
+
+  // Orders count
+  const ordersData = orders.orders || [];
+  document.getElementById('kpi-orders').textContent = fmt(ordersData.length);
+
+  // Users count
+  const usersData = users.users || [];
+  document.getElementById('kpi-users').textContent = fmt(usersData.length);
+
+  // Kitchens
+  const kitchensData = kitchens.kitchens || [];
+  const activeK = kitchensData.filter(k => k.status === 'active').length;
+  const pendingK = kitchensData.filter(k => k.status === 'pending_review').length;
+  document.getElementById('kpi-kitchens').textContent = fmt(activeK);
+
+  // GMV
+  const gmv = ordersData.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+  document.getElementById('kpi-gmv').textContent = fmt(gmv.toFixed(0));
+
+  // Orders badge
+  document.getElementById('orders-badge').textContent = ordersData.length;
+
+  // Bar chart — last 7 days
+  const days = ['أحد','إثن','ثلا','أرب','خمس','جمع','سبت'];
+  const counts = new Array(7).fill(0);
+  const now = new Date();
+  ordersData.forEach(o => {
+    const d = new Date(o.created_at);
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff < 7) counts[6 - diff]++;
+  });
+  const maxC = Math.max(...counts, 1);
+  const barHtml = counts.map((c, i) => `
+    <div class="bar-wrap">
+      <div class="bar" style="height:${Math.max(8, (c/maxC)*80)}px;background:${i===6?'var(--primary)':'rgba(232,96,60,.4)'}" title="${c} طلب"></div>
+      <div class="bar-label">${days[(new Date().getDay() - 6 + i + 7) % 7]}</div>
+    </div>`).join('');
+  document.getElementById('bar-chart').innerHTML = barHtml;
+
+  // Donut
+  const total = kitchensData.length || 1;
+  const activeAngle = (activeK / total) * 283;
+  const pendingAngle = (pendingK / total) * 283;
+  document.getElementById('donut-active').setAttribute('stroke-dasharray', `${activeAngle} ${283 - activeAngle}`);
+  document.getElementById('donut-center').textContent = total;
+  document.getElementById('leg-active').textContent = activeK;
+  document.getElementById('leg-pending').textContent = pendingK;
+  document.getElementById('leg-total').textContent = total;
+
+  // Recent orders table
+  const recent = ordersData.slice(0, 6);
+  if (recent.length === 0) {
+    document.getElementById('recent-orders-table').innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">لا توجد طلبات بعد</div></div>';
+  } else {
+    document.getElementById('recent-orders-table').innerHTML = `
+      <table class="table">
+        <thead><tr><th>رقم الطلب</th><th>الحالة</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+        <tbody>${recent.map(o => `
+          <tr>
+            <td><strong>${o.order_number || o.id?.slice(0,8) || '—'}</strong></td>
+            <td>${statusChip(o.status)}</td>
+            <td><strong>SAR ${fmt(o.total_amount)}</strong></td>
+            <td>${fmtDate(o.created_at)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // Kitchens table
+  const recentK = kitchensData.slice(0, 5);
+  if (recentK.length === 0) {
+    document.getElementById('kitchens-table').innerHTML = '<div class="empty"><div class="empty-ico">🍳</div><div class="empty-txt">لا توجد مطابخ بعد</div></div>';
+  } else {
+    document.getElementById('kitchens-table').innerHTML = `
+      <table class="table">
+        <thead><tr><th>المطبخ</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+        <tbody>${recentK.map(k => `
+          <tr>
+            <td><strong>${k.name_ar || k.name_en || '—'}</strong></td>
+            <td>${statusChip(k.status)}</td>
+            <td>${fmtDate(k.created_at)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+}
+
+// ── Orders ────────────────────────────────────────────────
+let currentOrderFilter = 'all';
+async function loadOrders() {
+  document.getElementById('orders-full-table').innerHTML = '<div class="loader"><div class="spinner"></div>جاري التحميل...</div>';
+  const res = await api('/orders?limit=100');
+  allOrders = res.orders || [];
+  renderOrders();
+}
+
+function filterOrders(status, el) {
+  currentOrderFilter = status;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  renderOrders();
+}
+
+function renderOrders() {
+  const filtered = currentOrderFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentOrderFilter);
+  if (!filtered.length) {
+    document.getElementById('orders-full-table').innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">لا توجد طلبات</div></div>';
+    return;
+  }
+  document.getElementById('orders-full-table').innerHTML = `
+    <table class="table">
+      <thead><tr><th>رقم الطلب</th><th>الحالة</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th></tr></thead>
+      <tbody>${filtered.map(o => `
+        <tr>
+          <td><strong>${o.order_number || o.id?.slice(0,8)}</strong></td>
+          <td>${statusChip(o.status)}</td>
+          <td><strong>SAR ${fmt(o.total_amount)}</strong></td>
+          <td>${o.payment_method || '—'}</td>
+          <td>${fmtDate(o.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Kitchens ──────────────────────────────────────────────
+async function loadKitchens() {
+  document.getElementById('kitchens-full-table').innerHTML = '<div class="loader"><div class="spinner"></div>جاري التحميل...</div>';
+  const res = await api('/kitchens?limit=100');
+  const data = res.kitchens || [];
+  if (!data.length) { document.getElementById('kitchens-full-table').innerHTML = '<div class="empty"><div class="empty-ico">🍳</div><div class="empty-txt">لا توجد مطابخ</div></div>'; return; }
+  document.getElementById('kitchens-full-table').innerHTML = `
+    <table class="table">
+      <thead><tr><th>الاسم</th><th>الحالة</th><th>المدينة</th><th>التاريخ</th></tr></thead>
+      <tbody>${data.map(k => `
+        <tr>
+          <td><strong>${k.name_ar || k.name_en || '—'}</strong></td>
+          <td>${statusChip(k.status)}</td>
+          <td>${k.city_id || '—'}</td>
+          <td>${fmtDate(k.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Couriers ──────────────────────────────────────────────
+async function loadCouriers() {
+  document.getElementById('couriers-full-table').innerHTML = '<div class="loader"><div class="spinner"></div>جاري التحميل...</div>';
+  const res = await api('/couriers?limit=100');
+  const data = res.couriers || [];
+  if (!data.length) { document.getElementById('couriers-full-table').innerHTML = '<div class="empty"><div class="empty-ico">🛵</div><div class="empty-txt">لا يوجد مندوبين بعد</div></div>'; return; }
+  document.getElementById('couriers-full-table').innerHTML = `
+    <table class="table">
+      <thead><tr><th>الاسم</th><th>الحالة</th><th>المركبة</th><th>التاريخ</th></tr></thead>
+      <tbody>${data.map(c => `
+        <tr>
+          <td><strong>${c.full_name || '—'}</strong></td>
+          <td>${statusChip(c.status)}</td>
+          <td>${c.vehicle_type || '—'}</td>
+          <td>${fmtDate(c.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Customers ─────────────────────────────────────────────
+async function loadCustomers() {
+  document.getElementById('customers-full-table').innerHTML = '<div class="loader"><div class="spinner"></div>جاري التحميل...</div>';
+  const res = await api('/users?role=customer&limit=100');
+  const data = res.users || [];
+  if (!data.length) { document.getElementById('customers-full-table').innerHTML = '<div class="empty"><div class="empty-ico">👤</div><div class="empty-txt">لا يوجد عملاء بعد</div></div>'; return; }
+  document.getElementById('customers-full-table').innerHTML = `
+    <table class="table">
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>اللغة</th><th>تاريخ التسجيل</th></tr></thead>
+      <tbody>${data.map(u => `
+        <tr>
+          <td><strong>${u.full_name || '—'}</strong></td>
+          <td style="direction:ltr;text-align:right">${u.phone || '—'}</td>
+          <td>${u.lang_preference === 'ar' ? '🇸🇦 عربي' : '🇬🇧 English'}</td>
+          <td>${fmtDate(u.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Branding ──────────────────────────────────────────────
+async function loadBranding() {
+  document.getElementById('branding-content').innerHTML = '<div class="loader"><div class="spinner"></div>جاري التحميل...</div>';
+  const res = await api('/branding');
+  const b = res.branding;
+  if (!b) { document.getElementById('branding-content').innerHTML = '<div class="empty"><div class="empty-ico">🎨</div><div class="empty-txt">لا توجد بيانات</div></div>'; return; }
+  document.getElementById('branding-content').innerHTML = `
+    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">اسم المنصة (EN)</div><div style="font-size:15px;font-weight:800">${b.platform_name}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">اسم المنصة (AR)</div><div style="font-size:15px;font-weight:800">${b.platform_name_ar}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">اللون الرئيسي</div><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:6px;background:${b.primary_color}"></div><strong>${b.primary_color}</strong></div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">اللون الثانوي</div><div style="display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:6px;background:${b.secondary_color}"></div><strong>${b.secondary_color}</strong></div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">البريد الإلكتروني</div><div style="font-size:13px;font-weight:700">${b.support_email}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">تاريخ الإنشاء</div><div style="font-size:13px;font-weight:700">${fmtDate(b.created_at)}</div></div>
+    </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────
+loadDashboard();
+
+// Auto-refresh every 30 seconds
+setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>

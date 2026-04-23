@@ -14,7 +14,21 @@ const { v4: uuid } = require('uuid');
 const db     = require('../db');
 const logger = require('../utils/logger');
 const { authenticate, requireRole } = require('../middleware/auth');
-const { uploadSingle, uploadToS3 } = require('../services/upload.service');
+const { uploadImage, processAndUpload } = require('../services/upload.service');
+
+// ── Branding image handler ────────────────────────────────
+const handleBrandingImage = async (req, res, next) => {
+  if (!req.file) return next();
+  try {
+    const { url } = await processAndUpload(
+      req.file.buffer, req.file.mimetype,
+      'branding',
+      { width: 800, quality: 85 }
+    );
+    req.uploadedUrl = url;
+    next();
+  } catch (err) { next(err); }
+};
 
 // ── Default branding ──────────────────────────────────────
 const DEFAULTS = {
@@ -127,17 +141,15 @@ router.put('/', authenticate, requireRole('super_admin', 'marketing'), async (re
 // POST /branding/logo — Upload logo
 // ═══════════════════════════════════════════════════════════
 router.post('/logo', authenticate, requireRole('super_admin', 'marketing'),
-  uploadSingle('logo'), async (req, res, next) => {
+  uploadImage, handleBrandingImage, async (req, res, next) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'الصورة مطلوبة' });
+    if (!req.uploadedUrl) return res.status(400).json({ error: 'الصورة مطلوبة' });
 
     const { country_id, type = 'primary' } = req.body;
     // type: primary | dark (for dark backgrounds)
 
-    const s3Key = `branding/logo_${type}_${Date.now()}.${req.file.originalname.split('.').pop()}`;
-    const url   = await uploadToS3(req.file.buffer, s3Key, req.file.mimetype);
-
     const field = type === 'dark' ? 'logo_dark_url' : 'logo_url';
+    const url = req.uploadedUrl;
 
     const existing = await db('platform_branding')
       .where({ country_id: country_id || null }).first();
@@ -165,12 +177,11 @@ router.post('/logo', authenticate, requireRole('super_admin', 'marketing'),
 // POST /branding/favicon
 // ═══════════════════════════════════════════════════════════
 router.post('/favicon', authenticate, requireRole('super_admin', 'marketing'),
-  uploadSingle('favicon'), async (req, res, next) => {
+  uploadImage, handleBrandingImage, async (req, res, next) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'الصورة مطلوبة' });
+    if (!req.uploadedUrl) return res.status(400).json({ error: 'الصورة مطلوبة' });
 
-    const s3Key = `branding/favicon_${Date.now()}.${req.file.originalname.split('.').pop()}`;
-    const url   = await uploadToS3(req.file.buffer, s3Key, req.file.mimetype);
+    const url = req.uploadedUrl;
 
     await db('platform_branding')
       .whereNull('country_id')

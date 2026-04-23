@@ -14,33 +14,44 @@ const { initFirebase } = require('./services/push.service');
 const { errorHandler, notFound } = require('./middleware/errors');
 const { handleMulterError }      = require('./services/upload.service');
 const {
-  securityHeaders, corsOptions, apiLimiter,
-  authLimiter, otpByPhone, paymentLimiter,
-  uploadLimiter, adminLimiter,
+  securityHeaders, corsOptions, api: apiLimiter,
+  auth: authLimiter, otpByPhone, payment: paymentLimiter,
+  upload: uploadLimiter, admin: adminLimiter,
   sanitizeInput, preventHPP, requestId, requestLogger,
   xssClean, blockPathTraversal, blockSQLInjection, ipBlocklist,
 } = require('./middleware/security');
 
 // ── Routes ────────────────────────────────────────────────
-const routes = {
-  auth:          require('./routes/auth'),
-  users:         require('./routes/users'),
-  kitchens:      require('./routes/kitchens'),
-  menu:          require('./routes/menu'),
-  orders:        require('./routes/orders'),
-  couriers:      require('./routes/couriers'),
-  payments:      require('./routes/payments'),
-  settlements:   require('./routes/settlements'),
-  coupons:       require('./routes/coupons'),
-  notifications: require('./routes/notifications'),
-  support:       require('./routes/support'),
-  admin:         require('./routes/admin'),
-  countries:     require('./routes/countries'),
-  uploads:       require('./routes/uploads'),
-  ads:           require('./routes/ads'),
-  commission:    require('./routes/commission'),
-  chat:          require('./routes/chat'),
+let routes = {};
+const routeFiles = {
+  auth:          './routes/auth',
+  users:         './routes/users',
+  kitchens:      './routes/kitchens',
+  menu:          './routes/menu',
+  orders:        './routes/orders',
+  couriers:      './routes/couriers',
+  payments:      './routes/payments',
+  settlements:   './routes/settlements',
+  coupons:       './routes/coupons',
+  notifications: './routes/notifications',
+  support:       './routes/support',
+  admin:         './routes/admin',
+  countries:     './routes/countries',
+  uploads:       './routes/uploads',
+  ads:           './routes/ads',
+  commission:    './routes/commission',
+  chat:          './routes/chat',
 };
+
+for (const [name, path] of Object.entries(routeFiles)) {
+  try {
+    routes[name] = require(path);
+    logger.info(`✅ Route loaded: ${name}`);
+  } catch (err) {
+    logger.error(`❌ Failed to load route: ${name}`, { path, error: err.message });
+    routes[name] = null; // Mark as failed but don't throw
+  }
+}
 
 // ── App setup ─────────────────────────────────────────────
 const app        = express();
@@ -101,35 +112,67 @@ app.get('/health', async (_, res) => {
 // ── API routes ────────────────────────────────────────────
 const v1 = '/api/v1';
 Object.entries(routes).forEach(([name, router]) => {
+  if (!router) {
+    logger.warn(`⚠️  Skipping undefined route: ${name}`);
+    return;
+  }
   app.use(`${v1}/${name}`, router);
 });
 
 // Extra feature routes
-const { loyaltyRouter, walletRouter, referralRouter, scheduledRouter } = require('./routes/extras');
-app.use(`${v1}/loyalty`,           loyaltyRouter);
-app.use(`${v1}/wallet`,            walletRouter);
-app.use(`${v1}/referral`,          referralRouter);
-app.use(`${v1}/orders/scheduled`,  scheduledRouter);
+let loyaltyRouter, walletRouter, referralRouter, scheduledRouter;
+let pricingRouter, analyticsRouter, foodSafetyRouter;
+let smartNotifRouter, batchingRouter, kitchenScoreRouter, subscriptionsRouter, processSmartNotifications;
+
+try {
+  ({ loyaltyRouter, walletRouter, referralRouter, scheduledRouter } = require('./routes/extras'));
+  app.use(`${v1}/loyalty`,           loyaltyRouter);
+  app.use(`${v1}/wallet`,            walletRouter);
+  app.use(`${v1}/referral`,          referralRouter);
+  app.use(`${v1}/orders/scheduled`,  scheduledRouter);
+} catch (err) {
+  logger.error('Failed to load extras routes', { error: err.message });
+  throw err;
+}
 
 // New feature routes
-const { pricingRouter }     = require('./routes/pricing');
-const { analyticsRouter }   = require('./routes/analytics');
-const { foodSafetyRouter }  = require('./routes/food-safety');
-app.use(`${v1}/pricing`,      pricingRouter);
-app.use(`${v1}/analytics`,    analyticsRouter);
-app.use(`${v1}/food-safety`,  foodSafetyRouter);
-app.use(`${v1}/branding`,     require('./routes/branding'));
-app.use(`${v1}/privacy`,      require('./routes/privacy'));
+try {
+  ({ pricingRouter } = require('./routes/pricing'));
+  ({ analyticsRouter } = require('./routes/analytics'));
+  ({ foodSafetyRouter } = require('./routes/food-safety'));
+  app.use(`${v1}/pricing`,      pricingRouter);
+  app.use(`${v1}/analytics`,    analyticsRouter);
+  app.use(`${v1}/food-safety`,  foodSafetyRouter);
+} catch (err) {
+  logger.error('Failed to load pricing/analytics/food-safety routes', { error: err.message });
+  throw err;
+}
+
+// Branding and privacy routes
+try {
+  app.use(`${v1}/branding`,     require('./routes/branding'));
+  app.use(`${v1}/privacy`,      require('./routes/privacy'));
+} catch (err) {
+  logger.error('Failed to load branding/privacy routes', { error: err.message });
+  throw err;
+}
 
 // Advanced features
-const { smartNotifRouter, batchingRouter, kitchenScoreRouter, subscriptionsRouter, processSmartNotifications } = require('./routes/advanced');
-app.use(`${v1}/smart-notifications`, smartNotifRouter);
-app.use(`${v1}/batching`,            batchingRouter);
-app.use(`${v1}/kitchen-score`,       kitchenScoreRouter);
-app.use(`${v1}/subscriptions`,       subscriptionsRouter);
+try {
+  ({ smartNotifRouter, batchingRouter, kitchenScoreRouter, subscriptionsRouter, processSmartNotifications } = require('./routes/advanced'));
+  app.use(`${v1}/smart-notifications`, smartNotifRouter);
+  app.use(`${v1}/batching`,            batchingRouter);
+  app.use(`${v1}/kitchen-score`,       kitchenScoreRouter);
+  app.use(`${v1}/subscriptions`,       subscriptionsRouter);
+} catch (err) {
+  logger.error('Failed to load advanced routes', { error: err.message });
+  throw err;
+}
 
 // Smart notification worker — runs every 5 minutes
-setInterval(processSmartNotifications, 5 * 60 * 1000);
+if (processSmartNotifications && typeof processSmartNotifications === 'function') {
+  setInterval(processSmartNotifications, 5 * 60 * 1000);
+}
 
 // ── Swagger docs (non-production) ─────────────────────────
 if (process.env.NODE_ENV !== 'production') {
@@ -138,7 +181,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ── Socket.IO ─────────────────────────────────────────────
-require('./sockets')(io);
+try {
+  require('./sockets')(io);
+} catch (err) {
+  logger.error('Failed to initialize Socket.IO', { error: err.message });
+  throw err;
+}
 
 // ── Error handlers ────────────────────────────────────────
 app.use(handleMulterError);
@@ -147,11 +195,20 @@ app.use(errorHandler);
 
 // ── Start server ──────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '3000');
-httpServer.listen(PORT, () => {
-  logger.info(`🚀 Khalto API v2.0.0 running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
-  logger.info(`📋 Routes: ${Object.keys(routes).map(r => `/api/v1/${r}`).join(', ')}`);
-  initFirebase();
-});
+
+// Wrap startup in async to catch any errors
+(async () => {
+  try {
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 Khalto API v2.0.0 running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      logger.info(`📋 Routes: ${Object.keys(routes).map(r => `/api/v1/${r}`).join(', ')}`);
+      initFirebase();
+    });
+  } catch (err) {
+    logger.error('🔥 Failed to start server', { error: err.message, stack: err.stack });
+    process.exit(1);
+  }
+})();
 
 // ── Graceful shutdown ─────────────────────────────────────
 const shutdown = async signal => {

@@ -1,4 +1,5 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const knex = require('knex');
 
 const getConnection = () => {
@@ -34,3 +35,4 @@ db.raw('SELECT 1')
   .catch(err => console.error('? Database connection failed:', err.message));
 
 module.exports = db;
+

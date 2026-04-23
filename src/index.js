@@ -1,7 +1,5 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 process.env.PGSSLMODE = 'no-verify';
-process.env.PGSSLMODE = 'no-verify';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 require('dotenv').config();
 const express       = require('express');
 const cors          = require('cors');
@@ -168,8 +166,10 @@ const shutdown = async signal => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
 process.on('unhandledRejection', reason => logger.error('Unhandled rejection', { reason }));
-process.on('uncaughtException',  err    => { logger.error('Uncaught exception', { err }); process.exit(1); });
+process.on('uncaughtException', err => { logger.error('Uncaught exception', { err }); });
 
 module.exports = { app, io };
+
+
 
 

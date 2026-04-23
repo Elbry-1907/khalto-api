@@ -1,46 +1,34 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-/**
- * Khalto — Database Migration Runner
- * شغّله مرة واحدة بعد أول deploy
- *
- * Usage:
- *   node src/db/migrate.js
- *   railway run node src/db/migrate.js
- */
 
 require('dotenv').config();
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const { Client } = require('pg');
-const fs         = require('fs');
-const path       = require('path');
+const fs   = require('fs');
+const path = require('path');
 
 const migrations = [
-  '../../schema.sql',                             // Base schema
-  'migrations/002_fcm_tokens.sql',
-  'migrations/003_auth_tables.sql',
-  'migrations/004_ads_tables.sql',
-  'migrations/005_notifications_commission.sql',
-  'migrations/006_security_privacy.sql',
-  'migrations/007_chat.sql',
-  'migrations/008_loyalty_referral.sql',
-  'migrations/009_pricing_analytics_food_safety.sql',
+  path.join(__dirname, '../../schema.sql'),
+  path.join(__dirname, 'migrations/002_fcm_tokens.sql'),
+  path.join(__dirname, 'migrations/003_auth_tables.sql'),
+  path.join(__dirname, 'migrations/004_ads_tables.sql'),
+  path.join(__dirname, 'migrations/005_notifications_commission.sql'),
+  path.join(__dirname, 'migrations/006_security_privacy.sql'),
+  path.join(__dirname, 'migrations/007_chat.sql'),
+  path.join(__dirname, 'migrations/008_loyalty_referral.sql'),
+  path.join(__dirname, 'migrations/009_pricing_analytics_food_safety.sql'),
+  path.join(__dirname, 'migrations/010_branding.sql'),
+  path.join(__dirname, 'migrations/011_advanced_features.sql'),
 ];
 
 async function migrate() {
-const dbUrl = new URL(process.env.DATABASE_URL);
-dbUrl.searchParams.set('sslmode', 'no-verify');
-
-const client = new Client({
-  connectionString: dbUrl.toString(),
-  ssl: { rejectUnauthorized: false }
-      
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
   });
 
   try {
     await client.connect();
     console.log('✅ Connected to database\n');
 
-    // Create migrations tracking table
     await client.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
         id         SERIAL PRIMARY KEY,
@@ -49,10 +37,9 @@ const client = new Client({
       );
     `);
 
-    for (const migration of migrations) {
-      const filename = path.basename(migration);
+    for (const filepath of migrations) {
+      const filename = path.basename(filepath);
 
-      // Check if already applied
       const { rows } = await client.query(
         'SELECT id FROM _migrations WHERE filename = $1',
         [filename]
@@ -63,8 +50,6 @@ const client = new Client({
         continue;
       }
 
-      // Read and run migration
-      const filepath = path.join(__dirname, migration);
       if (!fs.existsSync(filepath)) {
         console.log(`  ⚠️  File not found: ${filename}`);
         continue;
@@ -85,7 +70,7 @@ const client = new Client({
         await client.query('ROLLBACK');
         console.error(`  ❌ Failed: ${filename}`);
         console.error(`     Error: ${err.message}`);
-        // Continue with next migration instead of stopping
+        // Continue with next migration
       }
     }
 
@@ -99,5 +84,3 @@ const client = new Client({
 }
 
 migrate();
-
-

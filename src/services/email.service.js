@@ -1,8 +1,8 @@
 const sgMail  = require('@sendgrid/mail');
 const logger  = require('../utils/logger');
 
-const sgApiKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || "SG.placeholder";
-if (sgApiKey.startsWith("SG.")) { sgMail.setApiKey(sgApiKey); }
+const _sgKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || "";
+if (_sgKey && _sgKey.startsWith("SG.")) { sgMail.setApiKey(_sgKey); } else { console.warn("⚠️  SendGrid key not configured - emails disabled"); }
 
 const FROM = {
   email: process.env.SMTP_FROM || 'noreply@khalto.app',
@@ -221,4 +221,3 @@ const email = {
 };
 
 module.exports = { sendEmail, email };
-

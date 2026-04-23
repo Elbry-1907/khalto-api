@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS notifications (
   template_key  VARCHAR(100),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX idx_notif_user    ON notifications(user_id, is_read, created_at DESC);
-CREATE INDEX idx_notif_batch   ON notifications(batch_id);
+CREATE INDEX IF NOT EXISTS idx_notif_user    ON notifications(user_id, is_read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_batch   ON notifications(batch_id);
 
 -- ── Notification Templates ────────────────────────────────
 CREATE TABLE IF NOT EXISTS notification_templates (
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS notification_scheduled (
   created_by    UUID REFERENCES users(id),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX idx_sched_status ON notification_scheduled(status, schedule_at);
+CREATE INDEX IF NOT EXISTS idx_sched_status ON notification_scheduled(status, schedule_at);
 
 -- ── Commission Configs ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS commission_configs (
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS commission_rules (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX idx_rules_type ON commission_rules(rule_type, is_active, priority);
+CREATE INDEX IF NOT EXISTS idx_rules_type ON commission_rules(rule_type, is_active, priority);
 
 -- ── Add commission columns to orders if missing ───────────
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS commission_pct       NUMERIC(5,2);

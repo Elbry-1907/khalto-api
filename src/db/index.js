@@ -30,3 +30,4 @@ db.raw('SELECT 1')
   .catch(err => console.error('❌ Database connection failed:', err.message));
 
 module.exports = db;
+

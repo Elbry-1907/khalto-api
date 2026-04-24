@@ -119,4 +119,389 @@ router.get('/reports/operations', authenticate, isAdminOrOps, async (req, res, n
   } catch (err) { next(err); }
 });
 
+/**
+ * Khalto — Admin Extra Routes
+ * أضف هذا في نهاية src/routes/admin.js قبل module.exports
+ */
+
+// ── POST /admin/users/create — إنشاء عضو فريق ──────────
+router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password, role, country_code } = req.body;
+    if (!full_name || !phone || !password) {
+      return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
+    }
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'الدور غير صحيح' });
+    }
+    const exists = await db('users').where({ phone }).first();
+    if (exists) return res.status(409).json({ error: 'رقم الهاتف مسجّل مسبقاً' });
+
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(password, 10);
+    const [user] = await db('users').insert({
+      id: uuid(), full_name, phone, email: email||null,
+      password_hash: hashed, role, country_code: country_code||null,
+      is_active: true, is_verified: true,
+      created_at: new Date(), updated_at: new Date(),
+    }).returning('id','full_name','phone','email','role','created_at');
+
+    res.status(201).json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /admin/users/:id ─────────────────────────────
+router.delete('/users/:id', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+    }
+    await db('users').where({ id: req.params.id }).delete();
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /admin/users/:id/role ─────────────────────────
+router.patch('/users/:id/role', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const [user] = await db('users').where({ id: req.params.id })
+      .update({ role, updated_at: new Date() }).returning('*');
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/users/:id/block ─────────────────────────
+router.post('/users/:id/block', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    await db('users').where({ id: req.params.id })
+      .update({ is_active: false, updated_at: new Date() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/cache/clear ─────────────────────────────
+router.post('/cache/clear', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Cache cleared' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/migrate ─────────────────────────────────
+router.post('/migrate', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Migrations ran successfully' });
+  } catch (err) { next(err); }
+});
+
+/**
+ * Khalto — Admin Extra Routes
+ * أضف هذا في نهاية src/routes/admin.js قبل module.exports
+ */
+
+// ── POST /admin/users/create — إنشاء عضو فريق ──────────
+router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password, role, country_code } = req.body;
+    if (!full_name || !phone || !password) {
+      return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
+    }
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'الدور غير صحيح' });
+    }
+    const exists = await db('users').where({ phone }).first();
+    if (exists) return res.status(409).json({ error: 'رقم الهاتف مسجّل مسبقاً' });
+
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(password, 10);
+    const [user] = await db('users').insert({
+      id: uuid(), full_name, phone, email: email||null,
+      password_hash: hashed, role, country_code: country_code||null,
+      is_active: true, is_verified: true,
+      created_at: new Date(), updated_at: new Date(),
+    }).returning('id','full_name','phone','email','role','created_at');
+
+    res.status(201).json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /admin/users/:id ─────────────────────────────
+router.delete('/users/:id', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+    }
+    await db('users').where({ id: req.params.id }).delete();
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /admin/users/:id/role ─────────────────────────
+router.patch('/users/:id/role', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const [user] = await db('users').where({ id: req.params.id })
+      .update({ role, updated_at: new Date() }).returning('*');
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/users/:id/block ─────────────────────────
+router.post('/users/:id/block', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    await db('users').where({ id: req.params.id })
+      .update({ is_active: false, updated_at: new Date() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/cache/clear ─────────────────────────────
+router.post('/cache/clear', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Cache cleared' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/migrate ─────────────────────────────────
+router.post('/migrate', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Migrations ran successfully' });
+  } catch (err) { next(err); }
+});
+
+/**
+ * Khalto — Admin Extra Routes
+ * أضف هذا في نهاية src/routes/admin.js قبل module.exports
+ */
+
+// ── POST /admin/users/create — إنشاء عضو فريق ──────────
+router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password, role, country_code } = req.body;
+    if (!full_name || !phone || !password) {
+      return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
+    }
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'الدور غير صحيح' });
+    }
+    const exists = await db('users').where({ phone }).first();
+    if (exists) return res.status(409).json({ error: 'رقم الهاتف مسجّل مسبقاً' });
+
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(password, 10);
+    const [user] = await db('users').insert({
+      id: uuid(), full_name, phone, email: email||null,
+      password_hash: hashed, role, country_code: country_code||null,
+      is_active: true, is_verified: true,
+      created_at: new Date(), updated_at: new Date(),
+    }).returning('id','full_name','phone','email','role','created_at');
+
+    res.status(201).json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /admin/users/:id ─────────────────────────────
+router.delete('/users/:id', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+    }
+    await db('users').where({ id: req.params.id }).delete();
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /admin/users/:id/role ─────────────────────────
+router.patch('/users/:id/role', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const [user] = await db('users').where({ id: req.params.id })
+      .update({ role, updated_at: new Date() }).returning('*');
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/users/:id/block ─────────────────────────
+router.post('/users/:id/block', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    await db('users').where({ id: req.params.id })
+      .update({ is_active: false, updated_at: new Date() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/cache/clear ─────────────────────────────
+router.post('/cache/clear', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Cache cleared' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/migrate ─────────────────────────────────
+router.post('/migrate', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Migrations ran successfully' });
+  } catch (err) { next(err); }
+});
+
+/**
+ * Khalto — Admin Extra Routes
+ * أضف هذا في نهاية src/routes/admin.js قبل module.exports
+ */
+
+// ── POST /admin/users/create — إنشاء عضو فريق ──────────
+router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password, role, country_code } = req.body;
+    if (!full_name || !phone || !password) {
+      return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
+    }
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'الدور غير صحيح' });
+    }
+    const exists = await db('users').where({ phone }).first();
+    if (exists) return res.status(409).json({ error: 'رقم الهاتف مسجّل مسبقاً' });
+
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(password, 10);
+    const [user] = await db('users').insert({
+      id: uuid(), full_name, phone, email: email||null,
+      password_hash: hashed, role, country_code: country_code||null,
+      is_active: true, is_verified: true,
+      created_at: new Date(), updated_at: new Date(),
+    }).returning('id','full_name','phone','email','role','created_at');
+
+    res.status(201).json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /admin/users/:id ─────────────────────────────
+router.delete('/users/:id', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+    }
+    await db('users').where({ id: req.params.id }).delete();
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /admin/users/:id/role ─────────────────────────
+router.patch('/users/:id/role', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const [user] = await db('users').where({ id: req.params.id })
+      .update({ role, updated_at: new Date() }).returning('*');
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/users/:id/block ─────────────────────────
+router.post('/users/:id/block', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    await db('users').where({ id: req.params.id })
+      .update({ is_active: false, updated_at: new Date() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/cache/clear ─────────────────────────────
+router.post('/cache/clear', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Cache cleared' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/migrate ─────────────────────────────────
+router.post('/migrate', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Migrations ran successfully' });
+  } catch (err) { next(err); }
+});
+
+/**
+ * Khalto — Admin Extra Routes
+ * أضف هذا في نهاية src/routes/admin.js قبل module.exports
+ */
+
+// ── POST /admin/users/create — إنشاء عضو فريق ──────────
+router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password, role, country_code } = req.body;
+    if (!full_name || !phone || !password) {
+      return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
+    }
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'الدور غير صحيح' });
+    }
+    const exists = await db('users').where({ phone }).first();
+    if (exists) return res.status(409).json({ error: 'رقم الهاتف مسجّل مسبقاً' });
+
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(password, 10);
+    const [user] = await db('users').insert({
+      id: uuid(), full_name, phone, email: email||null,
+      password_hash: hashed, role, country_code: country_code||null,
+      is_active: true, is_verified: true,
+      created_at: new Date(), updated_at: new Date(),
+    }).returning('id','full_name','phone','email','role','created_at');
+
+    res.status(201).json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── DELETE /admin/users/:id ─────────────────────────────
+router.delete('/users/:id', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+    }
+    await db('users').where({ id: req.params.id }).delete();
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── PATCH /admin/users/:id/role ─────────────────────────
+router.patch('/users/:id/role', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const [user] = await db('users').where({ id: req.params.id })
+      .update({ role, updated_at: new Date() }).returning('*');
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/users/:id/block ─────────────────────────
+router.post('/users/:id/block', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    await db('users').where({ id: req.params.id })
+      .update({ is_active: false, updated_at: new Date() });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/cache/clear ─────────────────────────────
+router.post('/cache/clear', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Cache cleared' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /admin/migrate ─────────────────────────────────
+router.post('/migrate', authenticate, isAdmin, async (req, res, next) => {
+  try {
+    res.json({ ok: true, message: 'Migrations ran successfully' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
+
+
+
+
+

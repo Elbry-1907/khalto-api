@@ -1,5 +1,8 @@
 const sgMail  = require('@sendgrid/mail');
+const axios = require('axios');
 const logger  = require('../utils/logger');
+const db = require('../db');
+const { resolveActiveProvider } = require('./provider-resolver.service');
 
 const _sgKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || "";
 if (_sgKey && _sgKey.startsWith("SG.")) { sgMail.setApiKey(_sgKey); } else { console.warn("⚠️  SendGrid key not configured - emails disabled"); }
@@ -7,6 +10,170 @@ if (_sgKey && _sgKey.startsWith("SG.")) { sgMail.setApiKey(_sgKey); } else { con
 const FROM = {
   email: process.env.SMTP_FROM || 'noreply@khalto.app',
   name:  'Khalto خالتو',
+};
+
+// ── Helper: Get country ID from country code ──────────────
+const getCountryIdFromCode = async (countryCode = 'SA') => {
+  try {
+    const country = await db('countries')
+      .where({ code: countryCode })
+      .first('id');
+    return country?.id || null;
+  } catch (err) {
+    logger.warn('Failed to resolve country ID from code', { countryCode, error: err.message });
+    return null;
+  }
+};
+
+// ── Send via dynamic providers ────────────────────────────
+const sendViaDynamicProvider = async ({ to, subject, html, text, provider, replyTo, bcc }) => {
+  const { provider_key, config } = provider;
+
+  try {
+    switch (provider_key) {
+      case 'sendgrid': {
+        const apiKey = config.api_key;
+        const fromEmail = config.from_email || 'noreply@khalto.app';
+        const fromName = config.from_name || 'Khalto';
+        if (!apiKey) throw new Error('SendGrid: Missing API Key');
+
+        const msg = {
+          personalizations: [{ to: [{ email: to }] }],
+          from: { email: fromEmail, name: fromName },
+          subject,
+          content: [{ type: 'text/html', value: html }],
+          ...(text ? { content: [...(Array.isArray([]) ? [] : []), { type: 'text/plain', value: text }] } : {}),
+          ...(replyTo ? { reply_to: { email: replyTo } } : {}),
+          ...(bcc ? { bcc: [{ email: bcc }] } : {}),
+        };
+
+        await axios.post('https://api.sendgrid.com/v3/mail/send', msg, {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+        });
+        logger.info('Email sent via SendGrid (DB provider)', { to, subject });
+        return { success: true, provider: provider_key };
+      }
+
+      case 'mailgun': {
+        const apiKey = config.api_key;
+        const domain = config.domain;
+        const fromEmail = config.from_email || `noreply@${domain}`;
+        const region = config.region || 'us';
+        if (!apiKey || !domain) throw new Error('Mailgun: Missing credentials');
+
+        const baseUrl = region === 'eu' ? 'https://api.eu.mailgun.net/v3' : 'https://api.mailgun.net/v3';
+        const auth = Buffer.from(`api:${apiKey}`).toString('base64');
+        const form = new URLSearchParams({ from: fromEmail, to, subject, html });
+        if (replyTo) form.append('h:Reply-To', replyTo);
+        if (bcc) form.append('bcc', bcc);
+
+        const res = await axios.post(`${baseUrl}/${domain}/messages`, form, {
+          headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+        logger.info('Email sent via Mailgun (DB provider)', { to, subject });
+        return { success: true, provider: provider_key };
+      }
+
+      case 'resend': {
+        const apiKey = config.api_key;
+        const fromEmail = config.from_email || 'onboarding@resend.dev';
+        const fromName = config.from_name || 'Khalto';
+        if (!apiKey) throw new Error('Resend: Missing API Key');
+
+        const res = await axios.post('https://api.resend.com/emails', {
+          from: `${fromName} <${fromEmail}>`,
+          to: [to],
+          subject,
+          html,
+          ...(text ? { text } : {}),
+          ...(replyTo ? { reply_to: replyTo } : {}),
+          ...(bcc ? { bcc: [bcc] } : {}),
+        }, {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+        });
+        logger.info('Email sent via Resend (DB provider)', { to, subject });
+        return { success: true, provider: provider_key };
+      }
+
+      case 'smtp': {
+        try {
+          const nodemailer = require('nodemailer');
+          const transporter = nodemailer.createTransport({
+            host: config.host,
+            port: parseInt(config.port) || 587,
+            secure: config.encryption === 'ssl',
+            auth: { user: config.username, pass: config.password },
+          });
+          const result = await transporter.sendMail({
+            from: config.from_email || FROM.email,
+            to,
+            subject,
+            html,
+            text: text || subject,
+            ...(replyTo ? { replyTo } : {}),
+            ...(bcc ? { bcc } : {}),
+          });
+          logger.info('Email sent via SMTP (DB provider)', { to, subject });
+          return { success: true, provider: provider_key };
+        } catch (err) {
+          if (err.code === 'MODULE_NOT_FOUND') {
+            throw new Error('nodemailer not installed - SMTP unavailable');
+          }
+          throw err;
+        }
+      }
+
+      case 'ses': {
+        // Amazon SES requires AWS SDK which may not be installed
+        // For now, we'll throw a helpful error
+        throw new Error('Amazon SES requires AWS SDK - not currently supported via API');
+      }
+
+      default:
+        throw new Error(`Email provider not supported: ${provider_key}`);
+    }
+  } catch (err) {
+    logger.error('Dynamic provider email send failed', { to, provider: provider_key, err: err.message });
+    throw err;
+  }
+};
+
+// ── Core send function with dynamic provider fallback ─────
+const sendEmail = async ({ to, subject, html, text, replyTo, bcc, countryCode = 'SA' }) => {
+  try {
+    // Try to resolve active provider from DB
+    const countryId = await getCountryIdFromCode(countryCode);
+    if (countryId) {
+      const provider = await resolveActiveProvider('email', countryId);
+      if (provider) {
+        try {
+          const result = await sendViaDynamicProvider({ to, subject, html, text, provider, replyTo, bcc });
+          return result;
+        } catch (err) {
+          logger.warn('Dynamic email provider failed, falling back to SendGrid env', { error: err.message });
+          // Fall through to env-based code
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn('Provider resolution failed, using fallback', { error: err.message });
+  }
+
+  // Fallback: Original SendGrid env-based code
+  try {
+    const msg = {
+      to, from: FROM, subject, html,
+      text: text || subject,
+      ...(replyTo ? { replyTo } : {}),
+      ...(bcc ? { bcc } : {}),
+    };
+    await sgMail.send(msg);
+    logger.info('Email sent via SendGrid (env fallback)', { to, subject });
+    return { success: true };
+  } catch (err) {
+    logger.error('Email send failed', { to, err: err.message, response: err.response?.body });
+    return { success: false, error: err.message };
+  }
 };
 
 // ── Base HTML template ────────────────────────────────────
@@ -52,24 +219,6 @@ const baseTemplate = ({ title, body, cta, ctaUrl, isAR = false }) => `
 </div>
 </body>
 </html>`;
-
-// ── Core send function ────────────────────────────────────
-const sendEmail = async ({ to, subject, html, text, replyTo, bcc }) => {
-  try {
-    const msg = {
-      to, from: FROM, subject, html,
-      text: text || subject,
-      ...(replyTo ? { replyTo } : {}),
-      ...(bcc ? { bcc } : {}),
-    };
-    await sgMail.send(msg);
-    logger.info('Email sent', { to, subject });
-    return { success: true };
-  } catch (err) {
-    logger.error('Email send failed', { to, err: err.message, response: err.response?.body });
-    return { success: false, error: err.message };
-  }
-};
 
 // ── Email templates ───────────────────────────────────────
 const email = {

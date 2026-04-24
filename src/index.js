@@ -66,6 +66,7 @@ app.set('trust proxy', 1);
 app.set('io', io);
 // -- Dashboard static files --
 app.get('/khalto-api-dashboard', (req, res) => res.redirect('/khalto-api-dashboard/'));
+app.get('/khalto-api-dashboard', (req, res) => res.redirect('/khalto-api-dashboard/'));
 app.use('/khalto-api-dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
 
 // ── Core middleware ───────────────────────────────────────

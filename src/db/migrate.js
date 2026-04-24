@@ -17,6 +17,8 @@ const migrations = [
   path.join(__dirname, 'migrations/009_pricing_analytics_food_safety.sql'),
   path.join(__dirname, 'migrations/010_branding.sql'),
   path.join(__dirname, 'migrations/011_advanced_features.sql'),
+  path.join(__dirname, 'migrations/012_countries_full.sql'),
+  path.join(__dirname, 'migrations/013_service_providers.sql'),
 ];
 
 async function migrate() {

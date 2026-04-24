@@ -66,6 +66,7 @@ const Router = {
       notifications: 'إرسال إشعار',
       branding: 'البراندينج',
       countries: 'الدول والمدن',
+      providers: 'مزودي الخدمة',
       team: 'الفريق والصلاحيات',
     };
     document.getElementById('page-title').textContent = titles[pageName] || pageName;

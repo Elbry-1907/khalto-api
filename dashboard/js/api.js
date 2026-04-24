@@ -216,6 +216,19 @@ const API = {
     reset(body)         { return API.post('/branding/reset', body); },
     history()           { return API.get('/branding/history'); },
   },
+  providers: {
+    list()                  { return API.get('/providers'); },
+    get(id)                 { return API.get(`/providers/${id}`); },
+    update(id, config)      { return API.put(`/providers/${id}`, { config }); },
+    test(id, payload)       { return API.post(`/providers/${id}/test`, payload); },
+    activate(id)            { return API.post(`/providers/${id}/activate`); },
+    deactivate(id)          { return API.post(`/providers/${id}/deactivate`); },
+    webhooks()              { return API.get('/providers/webhooks'); },
+    countryMapping()        { return API.get('/providers/country-mapping'); },
+    setCountryMapping(body) { return API.put('/providers/country-mapping', body); },
+    testLogs(providerId)    { return API.get(`/providers/test-logs/${providerId}`); },
+  },
+
 
 };
 

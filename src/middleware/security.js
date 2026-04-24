@@ -159,12 +159,8 @@ setInterval(() => {
 
 // ── 5. CORS ───────────────────────────────────────────────
 const corsOptions = {
-  origin: (origin, cb) => {
-    const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
-    if (!origin || process.env.NODE_ENV !== 'production') return cb(null, true);
-    if (allowed.includes(origin)) return cb(null, true);
-    logger.warn('CORS blocked', { origin });
-    cb(new Error(`CORS: ${origin} not allowed`));
+  origin: function(origin, callback) {
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],

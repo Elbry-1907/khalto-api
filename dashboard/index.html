@@ -172,6 +172,7 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
 
 /* Responsive */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.g2,.g3{grid-template-columns:1fr}}
+.c-g{color:var(--green)}.c-r{color:var(--red)}
 </style>
 </head>
 <body>
@@ -224,6 +225,7 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
   <div class="sb-sec">Config</div>
   <div class="si" onclick="go('branding',this)"><div class="si-ico">🎨</div><div class="si-lbl">البراندينج</div></div>
   <div class="si" onclick="go('countries',this)"><div class="si-ico">🌍</div><div class="si-lbl">الدول والمدن</div></div>
+  <div class="si" onclick="go('team',this)"><div class="si-ico">👥</div><div class="si-lbl">الفريق والصلاحيات</div></div>
   <div class="si" onclick="go('communications',this)"><div class="si-ico">📱</div><div class="si-lbl">SMS / WA / Email</div></div>
   <div class="si" onclick="go('gateways',this)"><div class="si-ico">💳</div><div class="si-lbl">بوابات الدفع</div></div>
   <div class="si" onclick="go('settings',this)"><div class="si-ico">⚙️</div><div class="si-lbl">إعدادات النظام</div></div>
@@ -294,16 +296,23 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
 
     <!-- ── KITCHENS ── -->
     <div class="page" id="p-kitchens">
+      <div class="kpi-grid" style="margin-bottom:14px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">🍳</div><div class="kpi-badge">إجمالي</div></div><div class="kpi-val" id="k-total-kitchens">—</div><div class="kpi-lbl">إجمالي المطابخ</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">✅</div><div class="kpi-badge">نشط</div></div><div class="kpi-val" id="k-active-kitchens">—</div><div class="kpi-lbl">مطابخ نشطة</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">⏳</div><div class="kpi-badge">انتظار</div></div><div class="kpi-val" id="k-pending-kitchens">—</div><div class="kpi-lbl">بانتظار الموافقة</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">⏸️</div><div class="kpi-badge">موقوف</div></div><div class="kpi-val" id="k-suspended-kitchens">—</div><div class="kpi-lbl">موقوفة</div></div>
+      </div>
       <div class="tabs">
         <div class="tab on" onclick="filterTab(this,'all-kitchens')">الكل</div>
-        <div class="tab" onclick="filterTab(this,'pending_review')">بانتظار الموافقة</div>
-        <div class="tab" onclick="filterTab(this,'active')">نشط</div>
-        <div class="tab" onclick="filterTab(this,'suspended')">موقوف</div>
+        <div class="tab" onclick="filterTab(this,'pending_review')">⏳ بانتظار الموافقة</div>
+        <div class="tab" onclick="filterTab(this,'active')">✅ نشط</div>
+        <div class="tab" onclick="filterTab(this,'suspended')">⏸️ موقوف</div>
       </div>
       <div class="card">
         <div class="card-hd">
           <div class="card-title">🍳 المطابخ</div>
           <div style="display:flex;gap:8px">
+            <input id="kitchen-search" placeholder="🔍 بحث..." style="border:1.5px solid var(--border);border-radius:9px;padding:6px 12px;font-size:12px;font-family:Cairo,sans-serif;outline:none;width:160px" oninput="searchKitchens(this.value)"/>
             <button class="card-act" onclick="loadKitchens()">تحديث</button>
           </div>
         </div>
@@ -313,21 +322,46 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
 
     <!-- ── COURIERS ── -->
     <div class="page" id="p-couriers">
+      <div class="kpi-grid" style="margin-bottom:14px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">🛵</div><div class="kpi-badge">إجمالي</div></div><div class="kpi-val" id="k-total-couriers">—</div><div class="kpi-lbl">إجمالي المندوبين</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">🟢</div><div class="kpi-badge">متصل</div></div><div class="kpi-val" id="k-online-couriers">—</div><div class="kpi-lbl">متصلون الآن</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">⏳</div><div class="kpi-badge">انتظار</div></div><div class="kpi-val" id="k-pending-couriers">—</div><div class="kpi-lbl">بانتظار الموافقة</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">📦</div><div class="kpi-badge">اليوم</div></div><div class="kpi-val" id="k-deliveries-today">—</div><div class="kpi-lbl">توصيلات اليوم</div></div>
+      </div>
       <div class="tabs">
         <div class="tab on" onclick="filterTab(this,'all-couriers')">الكل</div>
-        <div class="tab" onclick="filterTab(this,'pending_review-c')">بانتظار الموافقة</div>
-        <div class="tab" onclick="filterTab(this,'active-c')">نشط</div>
+        <div class="tab" onclick="filterTab(this,'pending_review-c')">⏳ بانتظار الموافقة</div>
+        <div class="tab" onclick="filterTab(this,'active-c')">✅ نشط</div>
+        <div class="tab" onclick="filterTab(this,'suspended-c')">⏸️ موقوف</div>
       </div>
       <div class="card">
-        <div class="card-hd"><div class="card-title">🛵 المندوبين</div><button class="card-act" onclick="loadCouriers()">تحديث</button></div>
+        <div class="card-hd">
+          <div class="card-title">🛵 المندوبين</div>
+          <div style="display:flex;gap:8px">
+            <input id="courier-search" placeholder="🔍 بحث..." style="border:1.5px solid var(--border);border-radius:9px;padding:6px 12px;font-size:12px;font-family:Cairo,sans-serif;outline:none;width:160px" oninput="searchCouriers(this.value)"/>
+            <button class="card-act" onclick="loadCouriers()">تحديث</button>
+          </div>
+        </div>
         <div id="couriers-tbl"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
       </div>
     </div>
 
     <!-- ── CUSTOMERS ── -->
     <div class="page" id="p-customers">
+      <div class="kpi-grid" style="margin-bottom:14px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">👤</div><div class="kpi-badge">إجمالي</div></div><div class="kpi-val" id="k-total-customers">—</div><div class="kpi-lbl">إجمالي العملاء</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">✅</div><div class="kpi-badge">محقّق</div></div><div class="kpi-val" id="k-verified-customers">—</div><div class="kpi-lbl">حسابات محققة</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">🆕</div><div class="kpi-badge">جديد</div></div><div class="kpi-val" id="k-new-customers">—</div><div class="kpi-lbl">هذا الأسبوع</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">🚫</div><div class="kpi-badge">موقوف</div></div><div class="kpi-val" id="k-blocked-customers">—</div><div class="kpi-lbl">حسابات موقوفة</div></div>
+      </div>
       <div class="card">
-        <div class="card-hd"><div class="card-title">👤 العملاء</div><button class="card-act" onclick="loadCustomers()">تحديث</button></div>
+        <div class="card-hd">
+          <div class="card-title">👤 العملاء</div>
+          <div style="display:flex;gap:8px">
+            <input id="customer-search" placeholder="🔍 بحث باسم أو هاتف..." style="border:1.5px solid var(--border);border-radius:9px;padding:6px 12px;font-size:12px;font-family:Cairo,sans-serif;outline:none;width:200px" oninput="searchCustomers(this.value)"/>
+            <button class="card-act" onclick="loadCustomers()">تحديث</button>
+          </div>
+        </div>
         <div id="customers-tbl"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
       </div>
     </div>
@@ -457,6 +491,43 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
       <button class="btn btn-primary" onclick="resetCountryForm();openModal('modal-country-full')">+ إضافة دولة جديدة</button>
     </div>
 
+
+
+    <!-- ── TEAM ── -->
+    <div class="page" id="p-team">
+      <div class="kpi-grid" style="margin-bottom:14px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">👥</div><div class="kpi-badge">إجمالي</div></div><div class="kpi-val" id="k-total-team">0</div><div class="kpi-lbl">أعضاء الفريق</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">👑</div><div class="kpi-badge">Admin</div></div><div class="kpi-val" id="k-admins">0</div><div class="kpi-lbl">Super Admins</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">🎧</div><div class="kpi-badge">CS</div></div><div class="kpi-val" id="k-cs">0</div><div class="kpi-lbl">خدمة عملاء</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">💰</div><div class="kpi-badge">Finance</div></div><div class="kpi-val" id="k-finance">0</div><div class="kpi-lbl">فريق المالية</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd">
+          <div class="card-title">👥 فريق العمل</div>
+          <button class="card-act" onclick="openAddTeamMember()">+ إضافة عضو</button>
+        </div>
+        <div id="team-tbl"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🔐 مصفوفة الصلاحيات</div></div>
+        <div style="padding:16px;overflow-x:auto">
+          <table class="tbl" style="min-width:650px">
+            <thead><tr><th>الصلاحية</th><th style="text-align:center">Super Admin</th><th style="text-align:center">Operations</th><th style="text-align:center">Finance</th><th style="text-align:center">خدمة عملاء</th><th style="text-align:center">Marketing</th></tr></thead>
+            <tbody>
+              <tr><td>🍳 قبول/رفض المطابخ</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>🛵 تفعيل المندوبين</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>📋 تعديل حالة الطلبات</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>💰 اعتماد التسويات</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>🎁 إنشاء الكوبونات</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-g">✅</td></tr>
+              <tr><td>🔔 إرسال الإشعارات</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-g">✅</td></tr>
+              <tr><td>🌍 إعدادات الدول</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>👥 إدارة الفريق</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+              <tr><td>💳 بوابات الدفع</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-g">✅</td><td style="text-align:center" class="c-r">❌</td><td style="text-align:center" class="c-r">❌</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- ── COMMUNICATIONS ── -->
     <div class="page" id="p-communications">
@@ -812,6 +883,72 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
 
 <!-- ══════════ MODALS ══════════════════════════════════════ -->
 
+
+<!-- Kitchen Detail Modal -->
+<div class="modal-overlay" id="modal-kitchen-detail">
+  <div class="modal" style="width:700px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">🍳 تفاصيل المطبخ</div><button class="modal-close" onclick="closeModal('modal-kitchen-detail')">✕</button></div>
+    <div id="kitchen-detail-content"></div>
+    <div class="modal-footer" id="kitchen-detail-actions"></div>
+  </div>
+</div>
+
+<!-- Courier Detail Modal -->
+<div class="modal-overlay" id="modal-courier-detail">
+  <div class="modal" style="width:640px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">🛵 تفاصيل المندوب</div><button class="modal-close" onclick="closeModal('modal-courier-detail')">✕</button></div>
+    <div id="courier-detail-content"></div>
+    <div class="modal-footer" id="courier-detail-actions"></div>
+  </div>
+</div>
+
+<!-- Customer Detail Modal -->
+<div class="modal-overlay" id="modal-customer-detail">
+  <div class="modal" style="width:640px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">👤 تفاصيل العميل</div><button class="modal-close" onclick="closeModal('modal-customer-detail')">✕</button></div>
+    <div id="customer-detail-content"></div>
+    <div class="modal-footer" id="customer-detail-actions"></div>
+  </div>
+</div>
+
+<!-- Add Team Member Modal -->
+<div class="modal-overlay" id="modal-add-team">
+  <div class="modal" style="width:560px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title" id="team-modal-title">👥 إضافة عضو فريق</div><button class="modal-close" onclick="closeModal('modal-add-team')">✕</button></div>
+    <input type="hidden" id="edit-team-id"/>
+    <div class="form-row">
+      <div class="fld"><label>الاسم الكامل</label><input id="tm-name" placeholder="محمد أحمد"/></div>
+      <div class="fld"><label>رقم الهاتف</label><input id="tm-phone" placeholder="+966501234567" dir="ltr"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>البريد الإلكتروني</label><input id="tm-email" placeholder="user@khalto.app" dir="ltr"/></div>
+      <div class="fld"><label>كلمة المرور</label><input type="password" id="tm-password" placeholder="كلمة مرور قوية"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>الدور والصلاحية</label>
+        <select id="tm-role" onchange="updateRolePreview()">
+          <option value="super_admin">👑 Super Admin — كامل الصلاحيات</option>
+          <option value="operations">⚙️ Operations — المطابخ والمندوبين</option>
+          <option value="finance">💰 Finance — التسويات والمالية</option>
+          <option value="customer_service">🎧 خدمة العملاء — الدعم والشكاوى</option>
+          <option value="marketing">📢 Marketing — الكوبونات والإشعارات</option>
+        </select>
+      </div>
+      <div class="fld"><label>الدولة المسؤولة</label>
+        <select id="tm-country"><option value="">كل الدول</option><option value="SA">🇸🇦 السعودية</option><option value="EG">🇪🇬 مصر</option></select>
+      </div>
+    </div>
+    <div id="role-preview" style="background:rgba(232,96,60,.05);border:1px solid rgba(232,96,60,.15);border-radius:10px;padding:12px;font-size:11px;margin-top:4px">
+      <strong style="color:var(--primary)">صلاحيات هذا الدور:</strong><br/>
+      <span id="role-preview-text" style="color:var(--muted);line-height:1.8"></span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-team')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveTeamMember()">✅ إضافة العضو</button>
+    </div>
+  </div>
+</div>
+
 <!-- Kitchen Approve/Reject -->
 <div class="modal-overlay" id="modal-kitchen">
   <div class="modal">
@@ -1119,7 +1256,7 @@ function go(page, el) {
 }
 
 function refreshPage() {
-  const loaders = { dashboard:loadDash, orders:loadOrders, kitchens:loadKitchens, couriers:loadCouriers, customers:loadCustomers, settlements:loadSettlements, commission:loadCommission, coupons:loadCoupons, branding:loadBranding, countries:loadCountries, communications:()=>checkSMSStatus(), gateways:loadGateways, settings:loadSettings };
+  const loaders = { dashboard:loadDash, orders:loadOrders, kitchens:loadKitchens, couriers:loadCouriers, customers:loadCustomers, settlements:loadSettlements, commission:loadCommission, coupons:loadCoupons, branding:loadBranding, countries:loadCountries, communications:()=>checkSMSStatus(), gateways:loadGateways, settings:loadSettings, team:loadTeam };
   if (loaders[currentPage]) loaders[currentPage]();
 }
 
@@ -1976,7 +2113,7 @@ async function runMigrations() {
 }
 
 // Update pageTitles and loaders
-const extraTitles = {
+const extraTitles = { team: 'الفريق والصلاحيات',
   communications: 'SMS / WhatsApp / Email',
   gateways: 'بوابات الدفع',
   settings: 'إعدادات النظام'
@@ -1984,6 +2121,316 @@ const extraTitles = {
 Object.assign(pageTitles, extraTitles);
 
 const origGo = go;
+
+
+// ── KITCHENS FULL CONTROL ─────────────────────────────
+function searchKitchens(q) {
+  document.querySelectorAll('#kitchens-tbl tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function openKitchenDetail(id) {
+  const k = allKitchens.find(x => x.id === id);
+  if (!k) return;
+  selectedKitchenId = id;
+  document.getElementById('kitchen-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0 16px">
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">معلومات المطبخ</div>
+        <div class="stat-row"><span>الاسم (عربي)</span><strong>${k.name_ar||'—'}</strong></div>
+        <div class="stat-row"><span>الاسم (إنجليزي)</span><strong>${k.name_en||'—'}</strong></div>
+        <div class="stat-row"><span>الحالة</span>${chip(k.status)}</div>
+        <div class="stat-row"><span>تاريخ التسجيل</span><strong>${fmtDate(k.created_at)}</strong></div>
+        <div class="stat-row"><span>الحد الأدنى للطلب</span><strong>${k.min_order_amount||'—'}</strong></div>
+        <div class="stat-row"><span>وقت التحضير</span><strong>${k.avg_prep_time||'—'} دقيقة</strong></div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">الأداء</div>
+        <div class="stat-row"><span>التقييم</span><strong style="color:var(--accent)">${k.rating||'—'} ⭐</strong></div>
+        <div class="stat-row"><span>المدينة</span><strong>${k.city_id||'—'}</strong></div>
+        <div class="stat-row"><span>المطبخ مفتوح</span><strong>${k.is_open?'✅ نعم':'❌ لا'}</strong></div>
+      </div>
+    </div>
+    <div style="background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:12px;margin-bottom:4px">
+      <div class="form-row full">
+        <div class="fld"><label>ملاحظة القرار</label><textarea id="kitchen-action-note" placeholder="سبب القبول أو الرفض..." style="border:1.5px solid var(--border);border-radius:9px;padding:8px;font-size:12px;font-family:Cairo,sans-serif;width:100%;min-height:60px;resize:vertical"></textarea></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('kitchen-detail-actions').innerHTML = `
+    <button class="btn btn-danger" onclick="kitchenAction('suspended')">❌ رفض / إيقاف</button>
+    <button class="btn btn-outline" onclick="kitchenAction('pending_review')">🔄 إعادة للمراجعة</button>
+    <button class="btn btn-success" onclick="kitchenAction('active')">✅ قبول وتفعيل</button>
+  `;
+  openModal('modal-kitchen-detail');
+}
+
+// Override renderKitchens to show detail button
+const _origRenderKitchens = renderKitchens;
+renderKitchens = function() {
+  const f = currentFilter['kitchens'] || 'all-kitchens';
+  const data = f==='all-kitchens' ? allKitchens : allKitchens.filter(k=>k.status===f);
+  // Update KPIs
+  document.getElementById('k-total-kitchens').textContent    = allKitchens.length;
+  document.getElementById('k-active-kitchens').textContent   = allKitchens.filter(k=>k.status==='active').length;
+  document.getElementById('k-pending-kitchens').textContent  = allKitchens.filter(k=>k.status==='pending_review').length;
+  document.getElementById('k-suspended-kitchens').textContent= allKitchens.filter(k=>k.status==='suspended').length;
+
+  document.getElementById('kitchens-tbl').innerHTML = data.length ? `
+    <table class="tbl">
+      <thead><tr><th>المطبخ</th><th>الحالة</th><th>التقييم</th><th>المدينة</th><th>مفتوح</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead>
+      <tbody>${data.map(k=>`
+        <tr>
+          <td><strong>${k.name_ar||k.name_en||'—'}</strong><div style="font-size:10px;color:var(--muted)">${k.name_en||''}</div></td>
+          <td>${chip(k.status)}</td>
+          <td><strong style="color:var(--accent)">${k.rating||'—'} ⭐</strong></td>
+          <td>${k.city_id||'—'}</td>
+          <td>${k.is_open?'<span class="chip c-green">✅</span>':'<span class="chip c-grey">❌</span>'}</td>
+          <td>${fmtDate(k.created_at)}</td>
+          <td style="display:flex;gap:5px">
+            <button class="btn btn-primary btn-sm" onclick="openKitchenDetail('${k.id}')">تفاصيل</button>
+            <button class="btn btn-sm ${k.status==='active'?'btn-danger':'btn-success'}" onclick="openKitchenModal('${k.id}','${(k.name_ar||k.name_en||'').replace(/'/g,"\\'")}')">
+              ${k.status==='active'?'إيقاف':'تفعيل'}
+            </button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : emptyState('🍳','لا توجد مطابخ');
+};
+
+// ── COURIERS FULL CONTROL ─────────────────────────────
+function searchCouriers(q) {
+  document.querySelectorAll('#couriers-tbl tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function openCourierDetail(id) {
+  const c = allCouriers.find(x => x.id === id);
+  if (!c) return;
+  selectedCourierId = id;
+  document.getElementById('courier-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0 16px">
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">معلومات المندوب</div>
+        <div class="stat-row"><span>الاسم</span><strong>${c.full_name||'—'}</strong></div>
+        <div class="stat-row"><span>الهاتف</span><strong dir="ltr">${c.phone||'—'}</strong></div>
+        <div class="stat-row"><span>الحالة</span>${chip(c.status)}</div>
+        <div class="stat-row"><span>نوع المركبة</span><strong>${c.vehicle_type||'—'}</strong></div>
+        <div class="stat-row"><span>رقم المركبة</span><strong>${c.vehicle_plate||'—'}</strong></div>
+        <div class="stat-row"><span>تاريخ التسجيل</span><strong>${fmtDate(c.created_at)}</strong></div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">الأداء</div>
+        <div class="stat-row"><span>التقييم</span><strong style="color:var(--accent)">${c.rating||'—'} ⭐</strong></div>
+        <div class="stat-row"><span>إجمالي التوصيلات</span><strong>${c.total_deliveries||'0'}</strong></div>
+        <div class="stat-row"><span>متصل الآن</span><strong>${c.is_online?'🟢 نعم':'⚫ لا'}</strong></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('courier-detail-actions').innerHTML = `
+    <button class="btn btn-danger" onclick="courierAction('suspended')">⏸️ إيقاف</button>
+    <button class="btn btn-success" onclick="courierAction('active')">✅ تفعيل</button>
+  `;
+  openModal('modal-courier-detail');
+}
+
+const _origRenderCouriers = renderCouriers;
+renderCouriers = function() {
+  const f = currentFilter['couriers'] || 'all-couriers';
+  const data = f==='all-couriers' ? allCouriers
+    : f==='pending_review-c' ? allCouriers.filter(c=>c.status==='pending_review')
+    : f==='suspended-c' ? allCouriers.filter(c=>c.status==='suspended')
+    : allCouriers.filter(c=>c.status==='active');
+
+  document.getElementById('k-total-couriers').textContent   = allCouriers.length;
+  document.getElementById('k-online-couriers').textContent  = allCouriers.filter(c=>c.is_online).length;
+  document.getElementById('k-pending-couriers').textContent = allCouriers.filter(c=>c.status==='pending_review').length;
+  document.getElementById('k-deliveries-today').textContent = '—';
+
+  document.getElementById('couriers-tbl').innerHTML = data.length ? `
+    <table class="tbl">
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>الحالة</th><th>المركبة</th><th>التقييم</th><th>متصل</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead>
+      <tbody>${data.map(c=>`
+        <tr>
+          <td><strong>${c.full_name||'—'}</strong></td>
+          <td dir="ltr" style="text-align:right;font-size:11px">${c.phone||'—'}</td>
+          <td>${chip(c.status)}</td>
+          <td>${c.vehicle_type||'—'}</td>
+          <td><strong style="color:var(--accent)">${c.rating||'—'} ⭐</strong></td>
+          <td>${c.is_online?'<span class="chip c-green">🟢</span>':'<span class="chip c-grey">⚫</span>'}</td>
+          <td>${fmtDate(c.created_at)}</td>
+          <td style="display:flex;gap:5px">
+            <button class="btn btn-primary btn-sm" onclick="openCourierDetail('${c.id}')">تفاصيل</button>
+            <button class="btn btn-sm ${c.status==='active'?'btn-danger':'btn-success'}" onclick="openCourierModal('${c.id}','${(c.full_name||'').replace(/'/g,"\\'")}','${c.status}')">
+              ${c.status==='active'?'إيقاف':'تفعيل'}
+            </button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : emptyState('🛵','لا يوجد مندوبين');
+};
+
+// ── CUSTOMERS FULL CONTROL ────────────────────────────
+function searchCustomers(q) {
+  document.querySelectorAll('#customers-tbl tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function openCustomerDetail(id) {
+  const u = allCustomers.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('customer-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0 16px">
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">معلومات العميل</div>
+        <div class="stat-row"><span>الاسم</span><strong>${u.full_name||'—'}</strong></div>
+        <div class="stat-row"><span>الهاتف</span><strong dir="ltr">${u.phone||'—'}</strong></div>
+        <div class="stat-row"><span>البريد</span><strong dir="ltr" style="font-size:11px">${u.email||'—'}</strong></div>
+        <div class="stat-row"><span>اللغة</span><strong>${u.lang_preference==='ar'?'🇸🇦 عربي':'🇬🇧 English'}</strong></div>
+        <div class="stat-row"><span>محقّق</span><strong>${u.is_verified?'✅ نعم':'❌ لا'}</strong></div>
+        <div class="stat-row"><span>تاريخ التسجيل</span><strong>${fmtDate(u.created_at)}</strong></div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase">النشاط</div>
+        <div class="stat-row"><span>الدولة</span><strong>${u.country_id||'—'}</strong></div>
+        <div class="stat-row"><span>المعرّف</span><strong style="font-size:10px;font-family:monospace">${u.id?.slice(0,16)||'—'}...</strong></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('customer-detail-actions').innerHTML = `
+    <button class="btn btn-danger" onclick="blockCustomer('${id}')">🚫 إيقاف الحساب</button>
+    <button class="btn btn-outline" onclick="closeModal('modal-customer-detail')">إغلاق</button>
+  `;
+  openModal('modal-customer-detail');
+}
+
+async function blockCustomer(id) {
+  if (!confirm('إيقاف هذا الحساب؟')) return;
+  const res = await api(`/users/${id}/block`, { method:'POST', body:'{}' });
+  toast(res.ok ? '✅ تم إيقاف الحساب' : (res.error||'فشل الإيقاف'));
+  closeModal('modal-customer-detail');
+  loadCustomers();
+}
+
+const _origLoadCustomers = loadCustomers;
+loadCustomers = async function() {
+  document.getElementById('customers-tbl').innerHTML = '<div class="loader"><div class="spin"></div>جاري التحميل...</div>';
+  const res = await api('/users?role=customer&limit=200');
+  allCustomers = res.users || [];
+  const now = new Date();
+  const weekAgo = new Date(now - 7*86400000);
+  document.getElementById('k-total-customers').textContent   = allCustomers.length;
+  document.getElementById('k-verified-customers').textContent= allCustomers.filter(u=>u.is_verified).length;
+  document.getElementById('k-new-customers').textContent     = allCustomers.filter(u=>new Date(u.created_at)>weekAgo).length;
+  document.getElementById('k-blocked-customers').textContent = allCustomers.filter(u=>u.is_blocked||u.status==='suspended').length;
+  document.getElementById('cnt-customers').textContent       = allCustomers.length;
+
+  document.getElementById('customers-tbl').innerHTML = allCustomers.length ? `
+    <table class="tbl">
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>اللغة</th><th>التحقق</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead>
+      <tbody>${allCustomers.map(u=>`
+        <tr>
+          <td><strong>${u.full_name||'—'}</strong></td>
+          <td dir="ltr" style="text-align:right">${u.phone||'—'}</td>
+          <td>${u.lang_preference==='ar'?'🇸🇦':'🇬🇧'}</td>
+          <td>${u.is_verified?'<span class="chip c-green">✅</span>':'<span class="chip c-grey">—</span>'}</td>
+          <td>${fmtDate(u.created_at)}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="openCustomerDetail('${u.id}')">تفاصيل</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : emptyState('👤','لا يوجد عملاء');
+};
+
+// ── TEAM MANAGEMENT ───────────────────────────────────
+const roleDescriptions = {
+  super_admin:      'كامل الصلاحيات — الدول، الإعدادات، الفريق، البراندينج، المالية',
+  operations:       'قبول/رفض المطابخ والمندوبين — متابعة الطلبات — الإشعارات',
+  finance:          'التسويات والمدفوعات — التقارير المالية — إعدادات العمولة',
+  customer_service: 'إدارة الشكاوى — تعديل حالة الطلبات — إصدار تعويضات',
+  marketing:        'إنشاء الكوبونات — البراندينج — إرسال الإشعارات',
+};
+
+function openAddTeamMember() {
+  document.getElementById('team-modal-title').textContent = '👥 إضافة عضو فريق';
+  document.getElementById('edit-team-id').value = '';
+  ['tm-name','tm-phone','tm-email','tm-password'].forEach(id => document.getElementById(id).value = '');
+  updateRolePreview();
+  openModal('modal-add-team');
+}
+
+function updateRolePreview() {
+  const role = document.getElementById('tm-role').value;
+  document.getElementById('role-preview-text').textContent = roleDescriptions[role] || '—';
+}
+
+async function loadTeam() {
+  document.getElementById('team-tbl').innerHTML = '<div class="loader"><div class="spin"></div>جاري التحميل...</div>';
+  const res  = await api('/admin/users?role=internal&limit=100');
+  const data = res.users || [];
+  document.getElementById('k-total-team').textContent = data.length;
+  document.getElementById('k-admins').textContent     = data.filter(u=>u.role==='super_admin').length;
+  document.getElementById('k-cs').textContent         = data.filter(u=>u.role==='customer_service').length;
+  document.getElementById('k-finance').textContent    = data.filter(u=>u.role==='finance').length;
+
+  const roleLabels = { super_admin:'👑 Super Admin', operations:'⚙️ Operations', finance:'💰 Finance', customer_service:'🎧 خدمة عملاء', marketing:'📢 Marketing' };
+
+  document.getElementById('team-tbl').innerHTML = data.length ? `
+    <table class="tbl">
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>الدور</th><th>الدولة</th><th>تاريخ الإضافة</th><th>إجراء</th></tr></thead>
+      <tbody>${data.map(u=>`
+        <tr>
+          <td><strong>${u.full_name||'—'}</strong></td>
+          <td dir="ltr" style="text-align:right;font-size:11px">${u.phone||'—'}</td>
+          <td><span class="chip c-blue">${roleLabels[u.role]||u.role}</span></td>
+          <td>${u.country_code||'كل الدول'}</td>
+          <td>${fmtDate(u.created_at)}</td>
+          <td style="display:flex;gap:5px">
+            <button class="btn btn-outline btn-sm" onclick="editTeamMember('${u.id}')">تعديل</button>
+            <button class="btn btn-danger btn-sm" onclick="removeTeamMember('${u.id}','${u.full_name||''}')">حذف</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div style="padding:30px;text-align:center;color:var(--muted)">
+      <div style="font-size:36px;margin-bottom:10px">👥</div>
+      <div style="font-weight:700;margin-bottom:12px">لا يوجد أعضاء فريق</div>
+      <button class="btn btn-primary" onclick="openAddTeamMember()">+ إضافة أول عضو</button>
+    </div>`;
+}
+
+function editTeamMember(id) {
+  toast('قريباً — تعديل صلاحيات العضو');
+}
+
+async function removeTeamMember(id, name) {
+  if (!confirm('حذف ' + name + ' من الفريق؟')) return;
+  const res = await api('/admin/users/' + id, { method: 'DELETE', body: '{}' });
+  toast(res.ok ? '✅ تم الحذف' : (res.error||'فشل الحذف'));
+  loadTeam();
+}
+
+async function saveTeamMember() {
+  const id   = document.getElementById('edit-team-id').value;
+  const body = {
+    full_name: document.getElementById('tm-name').value,
+    phone:     document.getElementById('tm-phone').value,
+    email:     document.getElementById('tm-email').value,
+    password:  document.getElementById('tm-password').value,
+    role:      document.getElementById('tm-role').value,
+    country_code: document.getElementById('tm-country').value || null,
+  };
+  if (!body.full_name || !body.phone || !body.password) {
+    toast('يرجى إدخال الاسم والهاتف وكلمة المرور', 'error'); return;
+  }
+  const res = await api('/admin/users/create', { method:'POST', body:JSON.stringify(body) });
+  if (res.user || res.ok) {
+    toast('✅ تم إضافة العضو بنجاح');
+    closeModal('modal-add-team');
+    loadTeam();
+  } else toast(res.error||'فشل الإضافة','error');
+}
 
 // Auto-refresh every 60s
 setInterval(() => { if(currentPage==='dashboard') loadDash(); }, 60000);

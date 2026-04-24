@@ -1,0 +1,222 @@
+/* ═══════════════════════════════════════════════════════════
+   Khalto Dashboard — API Client
+   ═══════════════════════════════════════════════════════════ */
+
+const API = {
+
+  baseURL: 'https://khaltoapp-wotek.ondigitalocean.app/api/v1',
+
+  // ── Core fetch with auth ──────────────────────────────
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const token = localStorage.getItem('khalto_token');
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...options.headers,
+    };
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        body: options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : undefined,
+      });
+
+      // Handle 401 - token expired/invalid
+      if (response.status === 401) {
+        localStorage.removeItem('khalto_token');
+        localStorage.removeItem('khalto_user');
+        if (!endpoint.includes('/auth/')) {
+          window.location.reload();
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+      }
+
+      return data;
+    } catch (err) {
+      if (err.message === 'Failed to fetch') {
+        throw new Error('تعذّر الاتصال بالخادم');
+      }
+      throw err;
+    }
+  },
+
+  get(endpoint, params) {
+    const query = params ? '?' + new URLSearchParams(params).toString() : '';
+    return this.request(`${endpoint}${query}`);
+  },
+
+  post(endpoint, body) {
+    return this.request(endpoint, { method: 'POST', body });
+  },
+
+  put(endpoint, body) {
+    return this.request(endpoint, { method: 'PUT', body });
+  },
+
+  patch(endpoint, body) {
+    return this.request(endpoint, { method: 'PATCH', body });
+  },
+
+  delete(endpoint) {
+    return this.request(endpoint, { method: 'DELETE' });
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Auth
+  // ═══════════════════════════════════════════════════════
+
+  auth: {
+    login(phone, password) {
+      return API.post('/auth/login', { phone, password });
+    },
+    me() {
+      return API.get('/users/me');
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Dashboard
+  // ═══════════════════════════════════════════════════════
+
+  dashboard: {
+    stats() {
+      return API.get('/admin/dashboard');
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Admin
+  // ═══════════════════════════════════════════════════════
+
+  admin: {
+    listOrders(params)  { return API.get('/admin/orders', params); },
+    listUsers(params)   { return API.get('/admin/users', params); },
+    auditLogs(params)   { return API.get('/admin/audit-logs', params); },
+    createUser(body)    { return API.post('/admin/users/create', body); },
+    deleteUser(id)      { return API.delete(`/admin/users/${id}`); },
+    setRole(id, role)   { return API.patch(`/admin/users/${id}/role`, { role }); },
+    blockUser(id)       { return API.post(`/admin/users/${id}/block`); },
+    unblockUser(id)     { return API.post(`/admin/users/${id}/unblock`); },
+    financialReport(p)  { return API.get('/admin/reports/financial', p); },
+    opsReport(p)        { return API.get('/admin/reports/operations', p); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Orders
+  // ═══════════════════════════════════════════════════════
+
+  orders: {
+    get(id)             { return API.get(`/orders/${id}`); },
+    updateStatus(id, status, note) {
+      return API.patch(`/orders/${id}/status`, { status, note });
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Kitchens
+  // ═══════════════════════════════════════════════════════
+
+  kitchens: {
+    list(params)        { return API.get('/kitchens', params); },
+    get(id)             { return API.get(`/kitchens/${id}`); },
+    update(id, body)    { return API.patch(`/kitchens/${id}`, body); },
+    approve(id)         { return API.post(`/kitchens/${id}/approve`); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Couriers
+  // ═══════════════════════════════════════════════════════
+
+  couriers: {
+    list(params)        { return API.get('/couriers', params); },
+    approve(id)         { return API.post(`/couriers/${id}/approve`); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Countries
+  // ═══════════════════════════════════════════════════════
+
+  countries: {
+    list(params)        { return API.get('/countries', params); },
+    get(id)             { return API.get(`/countries/${id}`); },
+    create(body)        { return API.post('/countries', body); },
+    update(id, body)    { return API.put(`/countries/${id}`, body); },
+    toggle(id)          { return API.put(`/countries/${id}/toggle`); },
+    cities(id)          { return API.get(`/countries/${id}/cities`); },
+    addCity(id, body)   { return API.post(`/countries/${id}/cities`, body); },
+    seedDefaults()      { return API.post('/countries/seed/defaults'); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Settlements
+  // ═══════════════════════════════════════════════════════
+
+  settlements: {
+    list(params)        { return API.get('/settlements', params); },
+    get(id)             { return API.get(`/settlements/${id}`); },
+    approve(id)         { return API.post(`/settlements/${id}/approve`); },
+    run(body)           { return API.post('/settlements/run', body); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Commission
+  // ═══════════════════════════════════════════════════════
+
+  commission: {
+    config(params)      { return API.get('/commission/config', params); },
+    updateConfig(body)  { return API.put('/commission/config', body); },
+    listRules()         { return API.get('/commission/rules'); },
+    addRule(body)       { return API.post('/commission/rules', body); },
+    updateRule(id, body){ return API.patch(`/commission/rules/${id}`, body); },
+    deleteRule(id)      { return API.delete(`/commission/rules/${id}`); },
+    calcChef(body)      { return API.post('/commission/calculate/chef', body); },
+    calcCourier(body)   { return API.post('/commission/calculate/courier', body); },
+    stats(params)       { return API.get('/commission/stats', params); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Coupons
+  // ═══════════════════════════════════════════════════════
+
+  coupons: {
+    list()              { return API.get('/coupons'); },
+    create(body)        { return API.post('/coupons', body); },
+    update(id, body)    { return API.patch(`/coupons/${id}`, body); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Notifications
+  // ═══════════════════════════════════════════════════════
+
+  notifications: {
+    stats()             { return API.get('/notifications/stats'); },
+    listTemplates()     { return API.get('/notifications/templates'); },
+    createTemplate(body){ return API.post('/notifications/templates', body); },
+    updateTemplate(key, body) { return API.put(`/notifications/templates/${key}`, body); },
+    send(body)          { return API.post('/notifications/send', body); },
+    broadcast(body)     { return API.post('/notifications/broadcast', body); },
+    log(params)         { return API.get('/notifications/log', params); },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // Branding
+  // ═══════════════════════════════════════════════════════
+
+  branding: {
+    get(params)         { return API.get('/branding', params); },
+    update(body)        { return API.put('/branding', body); },
+    reset(body)         { return API.post('/branding/reset', body); },
+    history()           { return API.get('/branding/history'); },
+  },
+
+};
+
+window.API = API;

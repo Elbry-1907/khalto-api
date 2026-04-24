@@ -62,7 +62,10 @@ const io         = new Server(httpServer, {
 });
 
 app.set('trust proxy', 1);
-app.set('io', io); // Make io accessible in webhooks via req.app.get('io')
+app.set('io', io);
+// -- Dashboard static files --
+const path = require('path');
+app.use('/khalto-api-dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
 
 // ── Core middleware ───────────────────────────────────────
 app.use(requestId);

@@ -241,6 +241,7 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
     <div class="tb-right">
       <input class="tb-search" placeholder="🔍 بحث سريع..." id="global-search"/>
     </div>
+    <button onclick="toggleLang()" id="lang-btn" style="padding:5px 12px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);font-size:11px;font-weight:700;cursor:pointer;font-family:Cairo,sans-serif">🌐 EN</button>
     <div class="live-pill"><div class="live-dot"></div><div class="live-txt">Live</div></div>
     <div class="tb-btn" onclick="refreshPage()" title="تحديث">🔄</div>
     <div class="tb-btn" style="position:relative"><span>🔔</span><div class="notif-dot"></div></div>
@@ -369,7 +370,7 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
     <!-- ── SETTLEMENTS ── -->
     <div class="page" id="p-settlements">
       <div class="card">
-        <div class="card-hd"><div class="card-title">💰 التسويات</div><button class="card-act" onclick="loadSettlements()">تحديث</button></div>
+        <div class="card-hd"><div class="card-title">💰 التسويات</div><div style="display:flex;gap:8px"><button class="card-act" onclick="openModal('modal-settlement')">+ إنشاء تسوية</button><button class="card-act" onclick="loadSettlements()">تحديث</button></div></div>
         <div id="settlements-tbl"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
       </div>
     </div>
@@ -949,6 +950,159 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
   </div>
 </div>
 
+
+<!-- Kitchen Edit Modal -->
+<div class="modal-overlay" id="modal-kitchen-edit">
+  <div class="modal" style="width:640px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">✏️ تعديل المطبخ</div><button class="modal-close" onclick="closeModal('modal-kitchen-edit')">✕</button></div>
+    <input type="hidden" id="edit-kitchen-id"/>
+    <div class="form-row">
+      <div class="fld"><label>الاسم (عربي)</label><input id="ek-name-ar" placeholder="مطبخ أم علي"/></div>
+      <div class="fld"><label>الاسم (إنجليزي)</label><input id="ek-name-en" placeholder="Um Ali Kitchen"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>وصف (عربي)</label><input id="ek-bio-ar" placeholder="وصف المطبخ..."/></div>
+      <div class="fld"><label>وصف (إنجليزي)</label><input id="ek-bio-en" placeholder="Kitchen description..."/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>الحد الأدنى للطلب</label><input type="number" id="ek-min-order" placeholder="30"/></div>
+      <div class="fld"><label>وقت التحضير (دقيقة)</label><input type="number" id="ek-prep-time" placeholder="30"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>الحالة</label>
+        <select id="ek-status">
+          <option value="active">✅ نشط</option>
+          <option value="pending_review">⏳ قيد المراجعة</option>
+          <option value="suspended">⏸️ موقوف</option>
+        </select>
+      </div>
+      <div class="fld"><label>مفتوح الآن</label>
+        <select id="ek-is-open">
+          <option value="true">✅ نعم</option>
+          <option value="false">❌ لا</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-kitchen-edit')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveKitchenEdit()">💾 حفظ التعديلات</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kitchen Menu Modal -->
+<div class="modal-overlay" id="modal-kitchen-menu">
+  <div class="modal" style="width:800px;max-width:98vw">
+    <div class="modal-hd">
+      <div class="modal-title">🍽️ منيو المطبخ — <span id="menu-kitchen-name"></span></div>
+      <button class="modal-close" onclick="closeModal('modal-kitchen-menu')">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-primary btn-sm" onclick="openAddMenuItem()">+ إضافة صنف</button>
+      <button class="btn btn-outline btn-sm" onclick="loadKitchenMenu()">🔄 تحديث</button>
+    </div>
+    <div id="kitchen-menu-content"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
+  </div>
+</div>
+
+<!-- Add/Edit Menu Item Modal -->
+<div class="modal-overlay" id="modal-menu-item">
+  <div class="modal" style="width:580px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title" id="menu-item-modal-title">+ إضافة صنف جديد</div><button class="modal-close" onclick="closeModal('modal-menu-item')">✕</button></div>
+    <input type="hidden" id="edit-item-id"/>
+    <div class="form-row">
+      <div class="fld"><label>اسم الصنف (عربي) *</label><input id="mi-name-ar" placeholder="كبسة لحم"/></div>
+      <div class="fld"><label>اسم الصنف (إنجليزي)</label><input id="mi-name-en" placeholder="Lamb Kabsa"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>وصف (عربي)</label><input id="mi-desc-ar" placeholder="كبسة لحم بالبهارات..."/></div>
+      <div class="fld"><label>وصف (إنجليزي)</label><input id="mi-desc-en" placeholder="Lamb Kabsa with spices..."/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>السعر *</label><input type="number" id="mi-price" placeholder="45" min="0" step="0.5"/></div>
+      <div class="fld"><label>وقت التحضير (دقيقة)</label><input type="number" id="mi-prep-time" placeholder="30"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>السعرات الحرارية</label><input type="number" id="mi-calories" placeholder="اختياري"/></div>
+      <div class="fld"><label>الحالة</label>
+        <select id="mi-available">
+          <option value="true">✅ متاح</option>
+          <option value="false">❌ غير متاح</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full"><div class="fld"><label>صورة الصنف (URL)</label><input id="mi-image" placeholder="https://cdn.khalto.app/item.jpg" dir="ltr"/></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-menu-item')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveMenuItem()">💾 حفظ الصنف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Courier Edit Modal -->
+<div class="modal-overlay" id="modal-courier-edit">
+  <div class="modal" style="width:560px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">✏️ تعديل بيانات المندوب</div><button class="modal-close" onclick="closeModal('modal-courier-edit')">✕</button></div>
+    <input type="hidden" id="edit-courier-id-form"/>
+    <div class="form-row">
+      <div class="fld"><label>الاسم الكامل</label><input id="ec-name"/></div>
+      <div class="fld"><label>رقم الهاتف</label><input id="ec-phone" dir="ltr"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>نوع المركبة</label>
+        <select id="ec-vehicle">
+          <option value="motorcycle">دراجة نارية 🏍️</option>
+          <option value="car">سيارة 🚗</option>
+          <option value="bicycle">دراجة هوائية 🚲</option>
+        </select>
+      </div>
+      <div class="fld"><label>رقم اللوحة</label><input id="ec-plate" placeholder="أ ب ج 1234"/></div>
+    </div>
+    <div class="form-row full">
+      <div class="fld"><label>الحالة</label>
+        <select id="ec-status">
+          <option value="active">✅ نشط</option>
+          <option value="pending_review">⏳ قيد المراجعة</option>
+          <option value="suspended">⏸️ موقوف</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-courier-edit')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveCourierEdit()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settlement Create Modal -->
+<div class="modal-overlay" id="modal-settlement">
+  <div class="modal" style="width:520px;max-width:98vw">
+    <div class="modal-hd"><div class="modal-title">💰 إنشاء تسوية</div><button class="modal-close" onclick="closeModal('modal-settlement')">✕</button></div>
+    <div class="alert alert-info" style="font-size:12px">التسوية تُحسب تلقائياً من الطلبات المكتملة غير المُسواة</div>
+    <div class="form-row">
+      <div class="fld"><label>النوع</label>
+        <select id="st-type">
+          <option value="chef">🍳 شيف</option>
+          <option value="courier">🛵 مندوب</option>
+        </select>
+      </div>
+      <div class="fld"><label>الدولة</label>
+        <select id="st-country">
+          <option value="SA">🇸🇦 السعودية</option>
+          <option value="EG">🇪🇬 مصر</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="fld"><label>ملاحظة</label><input id="st-note" placeholder="دورة تسوية أسبوعية..."/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-settlement')">إلغاء</button>
+      <button class="btn btn-success" onclick="createSettlement()">✅ إنشاء التسوية</button>
+    </div>
+  </div>
+</div>
+
 <!-- Kitchen Approve/Reject -->
 <div class="modal-overlay" id="modal-kitchen">
   <div class="modal">
@@ -1304,10 +1458,12 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 // Tab filter
 let currentFilter = {};
 function filterTab(el, val) {
-  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  el.classList.add('on');
+  if (el && el.closest) {
+    el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    el.classList.add('on');
+  }
   currentFilter[currentPage] = val;
-  if (currentPage==='orders') renderOrders();
+  if (currentPage==='orders')   renderOrders();
   if (currentPage==='kitchens') renderKitchens();
   if (currentPage==='couriers') renderCouriers();
 }
@@ -1315,7 +1471,7 @@ function filterTab(el, val) {
 // ── DASHBOARD ─────────────────────────────────────────────
 async function loadDash() {
   const [ordRes, kitRes, usrRes] = await Promise.all([
-    api('/orders?limit=100'), api('/kitchens?limit=100'), api('/users?limit=100')
+    api('/orders?limit=100'), api('/kitchens?limit=100'), api('/admin/users?limit=100')
   ]);
   const orders   = ordRes.orders || [];
   const kitchens = kitRes.kitchens || [];
@@ -1550,7 +1706,7 @@ async function courierAction(status) {
 // ── CUSTOMERS ─────────────────────────────────────────────
 async function loadCustomers() {
   document.getElementById('customers-tbl').innerHTML = '<div class="loader"><div class="spin"></div>جاري التحميل...</div>';
-  const res = await api('/users?role=customer&limit=200');
+  const res = await api('/admin/users?role=customer&limit=200');
   allCustomers = res.users || [];
   document.getElementById('cnt-customers').textContent = allCustomers.length;
   document.getElementById('customers-tbl').innerHTML = allCustomers.length ? `
@@ -1606,7 +1762,7 @@ async function loadCommission() {
       <tbody>${data.map(r=>`
         <tr>
           <td><strong>${r.rule_type||r.type||'—'}</strong></td>
-          <td>${r.percentage_rate||r.pct||0}%</td>
+          <td>${r.value||0}%</td>
           <td>SAR ${fmt(r.fixed_amount||0)}</td>
           <td>${r.is_active?'<span class="chip c-green">مفعّل</span>':'<span class="chip c-grey">موقوف</span>'}</td>
         </tr>`).join('')}
@@ -1617,8 +1773,8 @@ async function loadCommission() {
 async function createCommissionRule() {
   const body = {
     rule_type:      document.getElementById('cm-type').value,
-    percentage_rate:parseFloat(document.getElementById('cm-pct').value)||0,
-    fixed_amount:   parseFloat(document.getElementById('cm-fixed').value)||0,
+    value:parseFloat(document.getElementById('cm-pct').value)||0,
+    fixed_amount:parseFloat(document.getElementById('cm-fixed').value)||0,
     priority:       parseInt(document.getElementById('cm-priority').value)||1,
     is_active:      true,
   };
@@ -1650,8 +1806,8 @@ async function loadCoupons() {
       <tbody>${data.map(c=>`
         <tr>
           <td><strong style="font-family:Sora,sans-serif">${c.code||'—'}</strong></td>
-          <td>${c.discount_type==='percentage'?'نسبة %':'مبلغ ثابت'}</td>
-          <td><strong>${c.discount_value}${c.discount_type==='percentage'?'%':' SAR'}</strong></td>
+          <td>${c.type==='percentage'?'نسبة %':'مبلغ ثابت'}</td>
+          <td><strong>${c.value}${c.type==='percentage'?'%':' SAR'}</strong></td>
           <td>${c.used_count||0} / ${c.max_uses||'∞'}</td>
           <td>${fmtDate(c.expires_at)}</td>
           <td>${c.is_active?'<span class="chip c-green">مفعّل</span>':'<span class="chip c-grey">منتهي</span>'}</td>
@@ -1663,12 +1819,12 @@ async function loadCoupons() {
 async function createCoupon() {
   const body = {
     code:          document.getElementById('cp-code').value.toUpperCase(),
-    discount_type: document.getElementById('cp-type').value,
-    discount_value:parseFloat(document.getElementById('cp-value').value)||0,
+    type: document.getElementById('cp-type').value,
+    value:parseFloat(document.getElementById('cp-value').value)||0,
     min_order_amount:parseFloat(document.getElementById('cp-min').value)||0,
-    expires_at:    document.getElementById('cp-expiry').value || null,
-    max_uses:      parseInt(document.getElementById('cp-limit').value)||null,
-    description_ar:document.getElementById('cp-desc').value,
+    valid_until:document.getElementById('cp-expiry').value || null,
+    usage_limit:parseInt(document.getElementById('cp-limit').value)||null,
+    
     is_active:     true,
   };
   if (!body.code) { toast('يرجى إدخال كود الكوبون','error'); return; }
@@ -2113,7 +2269,7 @@ async function runMigrations() {
 }
 
 // Update pageTitles and loaders
-const extraTitles = { team: 'الفريق والصلاحيات',
+const extraTitles = { team: 'الفريق والصلاحيات', countries: 'الدول والمدن',
   communications: 'SMS / WhatsApp / Email',
   gateways: 'بوابات الدفع',
   settings: 'إعدادات النظام'
@@ -2189,7 +2345,9 @@ renderKitchens = function() {
           <td>${k.is_open?'<span class="chip c-green">✅</span>':'<span class="chip c-grey">❌</span>'}</td>
           <td>${fmtDate(k.created_at)}</td>
           <td style="display:flex;gap:5px">
-            <button class="btn btn-primary btn-sm" onclick="openKitchenDetail('${k.id}')">تفاصيل</button>
+            <button class="btn btn-outline btn-sm" onclick="openKitchenDetail('${k.id}')">تفاصيل</button>
+            <button class="btn btn-primary btn-sm" onclick="openKitchenEdit('${k.id}')">تعديل</button>
+            <button class="btn btn-outline btn-sm" onclick="openKitchenMenu('${k.id}','${(k.name_ar||k.name_en||'').replace(/'/g,"\\'")}')">المنيو</button>
             <button class="btn btn-sm ${k.status==='active'?'btn-danger':'btn-success'}" onclick="openKitchenModal('${k.id}','${(k.name_ar||k.name_en||'').replace(/'/g,"\\'")}')">
               ${k.status==='active'?'إيقاف':'تفعيل'}
             </button>
@@ -2262,7 +2420,8 @@ renderCouriers = function() {
           <td>${c.is_online?'<span class="chip c-green">🟢</span>':'<span class="chip c-grey">⚫</span>'}</td>
           <td>${fmtDate(c.created_at)}</td>
           <td style="display:flex;gap:5px">
-            <button class="btn btn-primary btn-sm" onclick="openCourierDetail('${c.id}')">تفاصيل</button>
+            <button class="btn btn-outline btn-sm" onclick="openCourierDetail('${c.id}')">تفاصيل</button>
+            <button class="btn btn-primary btn-sm" onclick="openCourierEdit('${c.id}')">تعديل</button>
             <button class="btn btn-sm ${c.status==='active'?'btn-danger':'btn-success'}" onclick="openCourierModal('${c.id}','${(c.full_name||'').replace(/'/g,"\\'")}','${c.status}')">
               ${c.status==='active'?'إيقاف':'تفعيل'}
             </button>
@@ -2318,7 +2477,7 @@ async function blockCustomer(id) {
 const _origLoadCustomers = loadCustomers;
 loadCustomers = async function() {
   document.getElementById('customers-tbl').innerHTML = '<div class="loader"><div class="spin"></div>جاري التحميل...</div>';
-  const res = await api('/users?role=customer&limit=200');
+  const res = await api('/admin/users?role=customer&limit=200');
   allCustomers = res.users || [];
   const now = new Date();
   const weekAgo = new Date(now - 7*86400000);
@@ -2430,6 +2589,289 @@ async function saveTeamMember() {
     closeModal('modal-add-team');
     loadTeam();
   } else toast(res.error||'فشل الإضافة','error');
+}
+
+
+// ── COUNTRIES MISSING FUNCTIONS ──────────────────────
+function resetCountryForm() {
+  document.getElementById('country-modal-title').textContent = '🌍 إضافة دولة جديدة';
+  document.getElementById('edit-country-id').value = '';
+  ['c-name-ar','c-name-en','c-code','c-phone','c-currency','c-currency-sym'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const defaults = {'c-commission':'15','c-tax':'15','c-min-order':'50','c-settlement':'7',
+    'c-del-base':'10','c-del-km':'1','c-del-max':'20','c-surge':'2.5','c-chef-pct':'85','c-courier-pct':'80'};
+  Object.entries(defaults).forEach(([id,v]) => { const el=document.getElementById(id); if(el) el.value=v; });
+  updatePayoutBar();
+  const firstTab = document.querySelector('#modal-country-full .tabs .tab');
+  if (firstTab) switchCountryTab('basic', firstTab);
+}
+
+function switchCountryTab(tab, el) {
+  ['basic','financial','delivery','payouts'].forEach(t => {
+    const tabEl = document.getElementById('ctab-' + t);
+    if (tabEl) tabEl.style.display = t === tab ? 'block' : 'none';
+  });
+  if (el && el.closest) {
+    el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    el.classList.add('on');
+  }
+}
+
+async function saveCountry() {
+  const id = document.getElementById('edit-country-id').value;
+  const body = {
+    name_ar:                  document.getElementById('c-name-ar')?.value,
+    name_en:                  document.getElementById('c-name-en')?.value,
+    code:                     document.getElementById('c-code')?.value?.toUpperCase(),
+    phone_code:               document.getElementById('c-phone')?.value,
+    currency:                 document.getElementById('c-currency')?.value,
+    currency_symbol:          document.getElementById('c-currency-sym')?.value,
+    default_language:         document.getElementById('c-lang')?.value,
+    payment_gateway:          document.getElementById('c-gateway')?.value,
+    platform_commission_pct:  parseFloat(document.getElementById('c-commission')?.value)||15,
+    tax_rate:                 parseFloat(document.getElementById('c-tax')?.value)||15,
+    min_order_amount:         parseFloat(document.getElementById('c-min-order')?.value)||50,
+    settlement_frequency_days:parseInt(document.getElementById('c-settlement')?.value)||7,
+    delivery_fee_base:        parseFloat(document.getElementById('c-del-base')?.value)||10,
+    delivery_fee_per_km:      parseFloat(document.getElementById('c-del-km')?.value)||1,
+    max_delivery_distance_km: parseInt(document.getElementById('c-del-max')?.value)||20,
+    surge_multiplier_max:     parseFloat(document.getElementById('c-surge')?.value)||2.5,
+    chef_payout_pct:          parseFloat(document.getElementById('c-chef-pct')?.value)||85,
+    courier_delivery_pct:     parseFloat(document.getElementById('c-courier-pct')?.value)||80,
+  };
+  if (!body.name_ar || !body.code || !body.currency) {
+    toast('يرجى إدخال اسم الدولة والرمز والعملة', 'error'); return;
+  }
+  const res = id
+    ? await api('/countries/' + id, { method:'PUT', body:JSON.stringify(body) })
+    : await api('/countries', { method:'POST', body:JSON.stringify(body) });
+  if (res.country || res.ok) {
+    toast(id ? 'تم تحديث إعدادات الدولة ✅' : 'تم إضافة الدولة ✅');
+    closeModal('modal-country-full');
+    loadCountries();
+  } else toast(res.error || 'فشل الحفظ', 'error');
+}
+
+async function seedDefaultCountries() {
+  const res = await api('/countries/seed/defaults', { method:'POST', body:'{}' });
+  if (res.ok || res.countries) { toast('تم إضافة مصر والسعودية ✅'); loadCountries(); }
+  else toast(res.error || 'فشل الإضافة', 'error');
+}
+
+
+// ── BILINGUAL ─────────────────────────────────────────
+let currentLang = 'ar';
+const translations = {
+  ar: {
+    dashboard:'Dashboard', orders:'الطلبات', kitchens:'المطابخ',
+    couriers:'المندوبين', customers:'العملاء', settlements:'التسويات',
+    commission:'العمولات', coupons:'الكوبونات', notifications:'إرسال إشعار',
+    branding:'البراندينج', countries:'الدول والمدن', team:'الفريق والصلاحيات',
+    communications:'SMS / WhatsApp / Email', gateways:'بوابات الدفع', settings:'إعدادات النظام',
+  },
+  en: {
+    dashboard:'Dashboard', orders:'Orders', kitchens:'Kitchens',
+    couriers:'Couriers', customers:'Customers', settlements:'Settlements',
+    commission:'Commission', coupons:'Coupons', notifications:'Send Notification',
+    branding:'Branding', countries:'Countries', team:'Team & Roles',
+    communications:'SMS / WA / Email', gateways:'Payment Gateways', settings:'Settings',
+  }
+};
+
+function toggleLang() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('lang-btn').textContent = currentLang === 'ar' ? '🌐 EN' : '🌐 عربي';
+  document.getElementById('tb-title').textContent = translations[currentLang][currentPage] || currentPage;
+  document.querySelectorAll('.si-lbl').forEach(el => {
+    const page = el.closest('.si')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+    if (page && translations[currentLang][page]) el.textContent = translations[currentLang][page];
+  });
+}
+
+// ── KITCHEN EDIT ──────────────────────────────────────
+function openKitchenEdit(id) {
+  const k = allKitchens.find(x => x.id === id);
+  if (!k) return;
+  document.getElementById('edit-kitchen-id').value = id;
+  document.getElementById('ek-name-ar').value    = k.name_ar || '';
+  document.getElementById('ek-name-en').value    = k.name_en || '';
+  document.getElementById('ek-bio-ar').value     = k.bio_ar  || '';
+  document.getElementById('ek-bio-en').value     = k.bio_en  || '';
+  document.getElementById('ek-min-order').value  = k.min_order_amount || '';
+  document.getElementById('ek-prep-time').value  = k.avg_prep_time    || '';
+  document.getElementById('ek-status').value     = k.status  || 'active';
+  document.getElementById('ek-is-open').value    = k.is_open ? 'true' : 'false';
+  openModal('modal-kitchen-edit');
+}
+
+async function saveKitchenEdit() {
+  const id = document.getElementById('edit-kitchen-id').value;
+  const body = {
+    name_ar:          document.getElementById('ek-name-ar').value,
+    name_en:          document.getElementById('ek-name-en').value,
+    bio_ar:           document.getElementById('ek-bio-ar').value,
+    bio_en:           document.getElementById('ek-bio-en').value,
+    min_order_amount: parseFloat(document.getElementById('ek-min-order').value)||0,
+    avg_prep_time:    parseInt(document.getElementById('ek-prep-time').value)||30,
+    status:           document.getElementById('ek-status').value,
+    is_open:          document.getElementById('ek-is-open').value === 'true',
+  };
+  const res = await api('/kitchens/' + id, { method:'PATCH', body:JSON.stringify(body) });
+  if (res.kitchen || res.ok) {
+    toast('✅ تم تحديث بيانات المطبخ');
+    closeModal('modal-kitchen-edit');
+    loadKitchens();
+  } else toast(res.error || 'فشل التحديث', 'error');
+}
+
+// ── KITCHEN MENU ──────────────────────────────────────
+let currentMenuKitchenId = null;
+
+function openKitchenMenu(id, name) {
+  currentMenuKitchenId = id;
+  document.getElementById('menu-kitchen-name').textContent = name;
+  openModal('modal-kitchen-menu');
+  loadKitchenMenu();
+}
+
+async function loadKitchenMenu() {
+  if (!currentMenuKitchenId) return;
+  document.getElementById('kitchen-menu-content').innerHTML = '<div class="loader"><div class="spin"></div>جاري التحميل...</div>';
+  const res = await api('/menu/kitchens/' + currentMenuKitchenId);
+  const categories = res.categories || [];
+  const items = res.items || [];
+
+  if (!items.length && !categories.length) {
+    document.getElementById('kitchen-menu-content').innerHTML = `
+      <div style="text-align:center;padding:30px;color:var(--muted)">
+        <div style="font-size:36px;margin-bottom:10px">🍽️</div>
+        <div style="font-weight:700;margin-bottom:12px">لا توجد أصناف في المنيو</div>
+        <button class="btn btn-primary" onclick="openAddMenuItem()">+ إضافة أول صنف</button>
+      </div>`;
+    return;
+  }
+
+  const allItems = items.length ? items : (categories.flatMap(c => c.items || []));
+  document.getElementById('kitchen-menu-content').innerHTML = `
+    <table class="tbl">
+      <thead><tr><th>الصنف</th><th>السعر</th><th>وقت التحضير</th><th>الحالة</th><th>إجراء</th></tr></thead>
+      <tbody>${allItems.map(item => `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${item.image_url ? `<img src="${item.image_url}" style="width:36px;height:36px;border-radius:8px;object-fit:cover"/>` : '<div style="width:36px;height:36px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center">🍽️</div>'}
+              <div>
+                <div style="font-weight:700">${item.name_ar || item.name_en || '—'}</div>
+                <div style="font-size:10px;color:var(--muted)">${item.name_en || ''}</div>
+              </div>
+            </div>
+          </td>
+          <td><strong>${item.price || 0}</strong></td>
+          <td>${item.prep_time || '—'} د</td>
+          <td>${item.is_available !== false ? '<span class="chip c-green">✅ متاح</span>' : '<span class="chip c-grey">❌ غير متاح</span>'}</td>
+          <td style="display:flex;gap:4px">
+            <button class="btn btn-outline btn-sm" onclick="editMenuItem('${item.id}')">تعديل</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMenuItem('${item.id}','${(item.name_ar||item.name_en||'').replace(/'/g,"\\'")}')">حذف</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openAddMenuItem() {
+  document.getElementById('menu-item-modal-title').textContent = '+ إضافة صنف جديد';
+  document.getElementById('edit-item-id').value = '';
+  ['mi-name-ar','mi-name-en','mi-desc-ar','mi-desc-en','mi-image'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('mi-price').value    = '';
+  document.getElementById('mi-prep-time').value= '30';
+  document.getElementById('mi-available').value= 'true';
+  openModal('modal-menu-item');
+}
+
+function editMenuItem(id) {
+  document.getElementById('edit-item-id').value = id;
+  document.getElementById('menu-item-modal-title').textContent = '✏️ تعديل الصنف';
+  openModal('modal-menu-item');
+}
+
+async function saveMenuItem() {
+  const id = document.getElementById('edit-item-id').value;
+  const body = {
+    kitchen_id:   currentMenuKitchenId,
+    name_ar:      document.getElementById('mi-name-ar').value,
+    name_en:      document.getElementById('mi-name-en').value,
+    description_ar: document.getElementById('mi-desc-ar').value,
+    description_en: document.getElementById('mi-desc-en').value,
+    price:        parseFloat(document.getElementById('mi-price').value)||0,
+    prep_time:    parseInt(document.getElementById('mi-prep-time').value)||30,
+    calories:     parseInt(document.getElementById('mi-calories').value)||null,
+    image_url:    document.getElementById('mi-image').value || null,
+    is_available: document.getElementById('mi-available').value === 'true',
+  };
+  if (!body.name_ar) { toast('اسم الصنف مطلوب', 'error'); return; }
+  const res = id
+    ? await api('/menu/items/' + id, { method:'PATCH', body:JSON.stringify(body) })
+    : await api('/menu/items', { method:'POST', body:JSON.stringify(body) });
+  if (res.item || res.ok) {
+    toast(id ? '✅ تم تحديث الصنف' : '✅ تم إضافة الصنف');
+    closeModal('modal-menu-item');
+    loadKitchenMenu();
+  } else toast(res.error || 'فشل الحفظ', 'error');
+}
+
+async function deleteMenuItem(id, name) {
+  if (!confirm('حذف "' + name + '"؟')) return;
+  const res = await api('/menu/items/' + id, { method:'DELETE', body:'{}' });
+  toast(res.ok ? '✅ تم الحذف' : (res.error||'فشل الحذف'));
+  loadKitchenMenu();
+}
+
+// ── COURIER EDIT ──────────────────────────────────────
+function openCourierEdit(id) {
+  const c = allCouriers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('edit-courier-id-form').value = id;
+  document.getElementById('ec-name').value    = c.full_name || '';
+  document.getElementById('ec-phone').value   = c.phone || '';
+  document.getElementById('ec-vehicle').value = c.vehicle_type || 'motorcycle';
+  document.getElementById('ec-plate').value   = c.vehicle_plate || '';
+  document.getElementById('ec-status').value  = c.status || 'active';
+  openModal('modal-courier-edit');
+}
+
+async function saveCourierEdit() {
+  const id = document.getElementById('edit-courier-id-form').value;
+  const body = {
+    vehicle_type:  document.getElementById('ec-vehicle').value,
+    vehicle_plate: document.getElementById('ec-plate').value,
+    status:        document.getElementById('ec-status').value,
+  };
+  const res = await api('/couriers/' + id + '/admin', { method:'PATCH', body:JSON.stringify(body) });
+  if (res.courier || res.ok) {
+    toast('✅ تم تحديث بيانات المندوب');
+    closeModal('modal-courier-edit');
+    loadCouriers();
+  } else toast(res.error || 'فشل التحديث', 'error');
+}
+
+// ── SETTLEMENT CREATE ─────────────────────────────────
+async function createSettlement() {
+  const body = {
+    entity_type: document.getElementById('st-type').value,
+    country_code: document.getElementById('st-country').value,
+    note: document.getElementById('st-note').value,
+  };
+  const res = await api('/settlements/run', { method:'POST', body:JSON.stringify(body) });
+  if (res.ok || res.settlements) {
+    toast('✅ تم إنشاء التسوية بنجاح');
+    closeModal('modal-settlement');
+    loadSettlements();
+  } else toast(res.error || 'فشل إنشاء التسوية', 'error');
 }
 
 // Auto-refresh every 60s

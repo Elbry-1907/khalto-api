@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Khalto Admin — إدارة المزودين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#E8603C;--navy:#1a1a2e;--accent:#F5A623;--green:#27AE60;--red:#E74C3C;--blue:#3498DB;--bg:#F0F4F8;--white:#fff;--border:#E8ECF0;--text:#1a1a2e;--muted:#8B95A1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);padding:20px;max-width:1400px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+h1 span{color:var(--primary)}
+.subtitle{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+/* Service Sections */
+.services{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px}
+.service-card{background:var(--white);border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.service-hd{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.service-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.service-title{font-size:15px;font-weight:900}
+.service-sub{font-size:11px;color:var(--muted)}
+.active-badge{margin-right:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.ab-green{background:rgba(39,174,96,.1);color:var(--green)}
+.ab-grey{background:var(--bg);color:var(--muted)}
+
+/* Provider list */
+.providers{padding:14px}
+.provider{border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:.15s}
+.provider.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(232,96,60,.1)}
+.provider-hd{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.provider-hd:hover{background:rgba(232,96,60,.03)}
+.prov-logo{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg);flex-shrink:0;font-weight:900;font-family:Sora,sans-serif;font-size:11px}
+.prov-name{font-size:13px;font-weight:800}
+.prov-desc{font-size:10px;color:var(--muted)}
+.prov-status{margin-right:auto;display:flex;align-items:center;gap:6px}
+.status-dot{width:8px;height:8px;border-radius:50%}
+.dot-green{background:var(--green)}
+.dot-grey{background:#ccc}
+.dot-red{background:var(--red)}
+.prov-actions{display:flex;gap:6px;align-items:center}
+.btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Cairo,sans-serif;transition:.15s;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#c94d2c}
+.btn-outline{background:#fff;color:var(--text);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-success{background:var(--green);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-sm{padding:4px 10px;font-size:10px}
+
+/* Config form */
+.prov-config{display:none;padding:14px;background:var(--bg);border-top:1px solid var(--border)}
+.prov-config.open{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-row.full{grid-template-columns:1fr}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fld input,.fld select{border:1.5px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;font-family:Cairo,sans-serif;outline:none;color:var(--text);background:#fff}
+.fld input:focus,.fld select:focus{border-color:var(--primary)}
+.fld input[type=password]{direction:ltr;text-align:left;font-family:monospace}
+.config-actions{display:flex;gap:8px;margin-top:12px}
+
+/* Test result */
+.test-result{margin-top:8px;padding:10px;border-radius:9px;font-size:12px;display:none}
+.test-ok{background:rgba(39,174,96,.1);color:var(--green);border:1px solid rgba(39,174,96,.2)}
+.test-fail{background:rgba(231,76,60,.1);color:var(--red);border:1px solid rgba(231,76,60,.2)}
+
+/* Add provider */
+.add-provider{border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:.15s;margin-top:4px}
+.add-provider:hover{border-color:var(--primary);background:rgba(232,96,60,.03)}
+.add-provider-txt{font-size:12px;font-weight:700;color:var(--muted)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a2e;color:#fff;padding:11px 22px;border-radius:11px;font-size:13px;font-weight:700;transition:.25s;z-index:999;opacity:0;font-family:Cairo,sans-serif}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;width:500px;max-width:95vw}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:900}
+.modal-close{width:30px;height:30px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;font-size:14px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* Tabs */
+.top-tabs{display:flex;gap:4px;background:var(--white);padding:6px;border-radius:12px;margin-bottom:20px;border:1px solid var(--border)}
+.top-tab{flex:1;padding:9px;text-align:center;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);transition:.15s;border:none;font-family:Cairo,sans-serif;background:transparent}
+.top-tab.on{background:var(--primary);color:#fff}
+
+@media(max-width:800px){.services{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>Khalto — <span>إدارة المزودين</span></h1>
+<div class="subtitle">تحكّم في مزودي SMS وWhatsApp والبريد الإلكتروني وبوابات الدفع — كل دولة بإعداداتها المستقلة</div>
+
+<!-- Top Tabs -->
+<div class="top-tabs">
+  <button class="top-tab on" onclick="showSection('sms',this)">📱 SMS</button>
+  <button class="top-tab" onclick="showSection('whatsapp',this)">💬 WhatsApp</button>
+  <button class="top-tab" onclick="showSection('email',this)">📧 Email</button>
+  <button class="top-tab" onclick="showSection('payment',this)">💳 بوابات الدفع</button>
+</div>
+
+<!-- ══ SMS ═══════════════════════════════════════════ -->
+<div id="sec-sms" class="services">
+
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(52,152,219,.1)">📱</div>
+      <div><div class="service-title">مزودو SMS</div><div class="service-sub">إرسال رسائل نصية — OTP وإشعارات</div></div>
+      <div class="active-badge ab-green" id="sms-active-lbl">Twilio نشط</div>
+    </div>
+    <div class="providers" id="sms-providers">
+
+      <!-- Twilio -->
+      <div class="provider active" id="prov-sms-twilio">
+        <div class="provider-hd" onclick="toggleConfig('sms-twilio')">
+          <div class="prov-logo" style="background:#F22F46;color:#fff">TW</div>
+          <div><div class="prov-name">Twilio</div><div class="prov-desc">عالمي • موثوق • OTP ممتاز</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-sms-twilio"></div><span id="lbl-sms-twilio" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('sms','twilio')">تفعيل</button>
+          </div>
+        </div>
+        <div class="prov-config" id="config-sms-twilio">
+          <div class="form-row">
+            <div class="fld"><label>Account SID</label><input type="password" id="sms-twilio-sid" placeholder="ACxxxxxxxx"/></div>
+            <div class="fld"><label>Auth Token</label><input type="password" id="sms-twilio-token" placeholder="xxxxxxxx"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>رقم السعودية +966</label><input id="sms-twilio-sa" placeholder="+966xxxxxxxxx"/></div>
+            <div class="fld"><label>رقم مصر +20</label><input id="sms-twilio-eg" placeholder="+20xxxxxxxxxx"/></div>
+          </div>
+          <div class="form-row full">
+            <div class="fld"><label>رقم افتراضي (دول أخرى)</label><input id="sms-twilio-default" placeholder="+1xxxxxxxxxx"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('sms','twilio')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('sms','twilio')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-sms-twilio"></div>
+        </div>
+      </div>
+
+      <!-- Unifonic -->
+      <div class="provider" id="prov-sms-unifonic">
+        <div class="provider-hd" onclick="toggleConfig('sms-unifonic')">
+          <div class="prov-logo" style="background:#00A651;color:#fff">UF</div>
+          <div><div class="prov-name">Unifonic</div><div class="prov-desc">السعودية والخليج • أسعار محلية</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-sms-unifonic"></div><span id="lbl-sms-unifonic" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('sms','unifonic')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-sms-unifonic">
+          <div class="form-row">
+            <div class="fld"><label>App ID</label><input type="password" id="sms-unifonic-appid" placeholder="App ID"/></div>
+            <div class="fld"><label>Sender ID</label><input id="sms-unifonic-sender" placeholder="Khalto"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('sms','unifonic')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('sms','unifonic')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-sms-unifonic"></div>
+        </div>
+      </div>
+
+      <!-- Vonage -->
+      <div class="provider" id="prov-sms-vonage">
+        <div class="provider-hd" onclick="toggleConfig('sms-vonage')">
+          <div class="prov-logo" style="background:#6013A0;color:#fff">VN</div>
+          <div><div class="prov-name">Vonage (Nexmo)</div><div class="prov-desc">عالمي • بديل Twilio</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-sms-vonage"></div><span id="lbl-sms-vonage" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('sms','vonage')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-sms-vonage">
+          <div class="form-row">
+            <div class="fld"><label>API Key</label><input type="password" id="sms-vonage-key" placeholder="API Key"/></div>
+            <div class="fld"><label>API Secret</label><input type="password" id="sms-vonage-secret" placeholder="API Secret"/></div>
+          </div>
+          <div class="form-row full"><div class="fld"><label>Sender ID</label><input id="sms-vonage-sender" placeholder="Khalto"/></div></div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('sms','vonage')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('sms','vonage')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-sms-vonage"></div>
+        </div>
+      </div>
+
+      <!-- MSG91 -->
+      <div class="provider" id="prov-sms-msg91">
+        <div class="provider-hd" onclick="toggleConfig('sms-msg91')">
+          <div class="prov-logo" style="background:#FF6B35;color:#fff">M91</div>
+          <div><div class="prov-name">MSG91</div><div class="prov-desc">اقتصادي • مناسب للحجم الكبير</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-sms-msg91"></div><span id="lbl-sms-msg91" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('sms','msg91')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-sms-msg91">
+          <div class="form-row">
+            <div class="fld"><label>Auth Key</label><input type="password" id="sms-msg91-key" placeholder="Auth Key"/></div>
+            <div class="fld"><label>Sender ID</label><input id="sms-msg91-sender" placeholder="KHALTO"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('sms','msg91')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('sms','msg91')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-sms-msg91"></div>
+        </div>
+      </div>
+
+      <div class="add-provider" onclick="openAddProvider('sms')">
+        <div class="add-provider-txt">+ إضافة مزود SMS مخصص</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test SMS Panel -->
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(39,174,96,.1)">🧪</div>
+      <div><div class="service-title">اختبار SMS</div><div class="service-sub">إرسال رسالة تجريبية بالمزود النشط</div></div>
+    </div>
+    <div style="padding:16px">
+      <div class="form-row full"><div class="fld"><label>رقم الهاتف</label><input id="test-sms-phone" placeholder="+966501234567" dir="ltr"/></div></div>
+      <div class="form-row full"><div class="fld"><label>نص الرسالة</label><input id="test-sms-text" value="مرحباً من خالتو! رمز التحقق: 1234 🎉"/></div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="sendTestSMS()">📤 إرسال SMS تجريبي</button>
+      <div class="test-result" id="test-sms-result" style="margin-top:8px"></div>
+
+      <!-- SMS Templates Preview -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;font-weight:800;margin-bottom:10px">قوالب SMS</div>
+        <select id="sms-tpl-select" onchange="previewTemplate()" style="width:100%;border:1.5px solid var(--border);border-radius:9px;padding:8px;font-family:Cairo,sans-serif;font-size:12px;margin-bottom:8px">
+          <option value="otp">🔐 OTP — رمز التحقق</option>
+          <option value="order_confirm">📦 تأكيد الطلب</option>
+          <option value="order_ready">✅ الطلب جاهز</option>
+          <option value="delivered">🎉 تم التوصيل</option>
+          <option value="settlement">💰 تسوية مالية</option>
+          <option value="welcome">👋 ترحيب</option>
+        </select>
+        <div style="background:var(--bg);border-radius:9px;padding:12px;font-size:12px;line-height:1.7" id="sms-tpl-preview">
+          رمز التحقق الخاص بك في خالتو: <strong>{code}</strong> — صالح 5 دقائق. لا تشاركه مع أحد.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ WHATSAPP ══════════════════════════════════════ -->
+<div id="sec-whatsapp" class="services" style="display:none">
+
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(37,211,102,.1)">💬</div>
+      <div><div class="service-title">مزودو WhatsApp</div><div class="service-sub">رسائل WhatsApp Business</div></div>
+      <div class="active-badge ab-grey" id="wa-active-lbl">غير مفعّل</div>
+    </div>
+    <div class="providers">
+
+      <!-- Twilio WhatsApp -->
+      <div class="provider" id="prov-wa-twilio">
+        <div class="provider-hd" onclick="toggleConfig('wa-twilio')">
+          <div class="prov-logo" style="background:#F22F46;color:#fff">TW</div>
+          <div><div class="prov-name">Twilio WhatsApp</div><div class="prov-desc">Sandbox مجاني للتطوير • Business للإنتاج</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-wa-twilio"></div><span id="lbl-wa-twilio" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('wa','twilio')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-wa-twilio">
+          <div class="alert" style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:9px;padding:10px;font-size:11px;margin-bottom:10px">
+            ⚠️ نفس بيانات Twilio SMS — تأكد من تفعيل WhatsApp في لوحة Twilio
+          </div>
+          <div class="form-row full"><div class="fld"><label>WhatsApp رقم الإرسال</label><input id="wa-twilio-number" placeholder="whatsapp:+14155238886"/></div></div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('wa','twilio')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('wa','twilio')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-wa-twilio"></div>
+        </div>
+      </div>
+
+      <!-- Meta Business API -->
+      <div class="provider" id="prov-wa-meta">
+        <div class="provider-hd" onclick="toggleConfig('wa-meta')">
+          <div class="prov-logo" style="background:#0866FF;color:#fff">Meta</div>
+          <div><div class="prov-name">Meta Business API</div><div class="prov-desc">المباشر من Meta • الأسرع والأرخص</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-wa-meta"></div><span id="lbl-wa-meta" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('wa','meta')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-wa-meta">
+          <div class="form-row">
+            <div class="fld"><label>Phone Number ID</label><input type="password" id="wa-meta-phone-id" placeholder="Phone Number ID"/></div>
+            <div class="fld"><label>Access Token</label><input type="password" id="wa-meta-token" placeholder="Access Token"/></div>
+          </div>
+          <div class="form-row full"><div class="fld"><label>Business Account ID</label><input id="wa-meta-biz-id" placeholder="Business Account ID"/></div></div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('wa','meta')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('wa','meta')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-wa-meta"></div>
+        </div>
+      </div>
+
+      <!-- 360Dialog -->
+      <div class="provider" id="prov-wa-360dialog">
+        <div class="provider-hd" onclick="toggleConfig('wa-360dialog')">
+          <div class="prov-logo" style="background:#25D366;color:#fff">360</div>
+          <div><div class="prov-name">360Dialog</div><div class="prov-desc">شريك Meta معتمد • سهل الإعداد</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-wa-360dialog"></div><span id="lbl-wa-360dialog" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('wa','360dialog')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-wa-360dialog">
+          <div class="form-row">
+            <div class="fld"><label>API Key</label><input type="password" id="wa-360dialog-key" placeholder="API Key"/></div>
+            <div class="fld"><label>Channel ID</label><input id="wa-360dialog-channel" placeholder="Channel ID"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('wa','360dialog')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('wa','360dialog')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-wa-360dialog"></div>
+        </div>
+      </div>
+
+      <div class="add-provider" onclick="openAddProvider('wa')">
+        <div class="add-provider-txt">+ إضافة مزود WhatsApp مخصص</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test WA -->
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(37,211,102,.1)">🧪</div>
+      <div><div class="service-title">اختبار WhatsApp</div><div class="service-sub">إرسال رسالة تجريبية</div></div>
+    </div>
+    <div style="padding:16px">
+      <div class="form-row full"><div class="fld"><label>رقم الهاتف (مع كود الدولة)</label><input id="test-wa-phone" placeholder="+966501234567" dir="ltr"/></div></div>
+      <div class="form-row full"><div class="fld"><label>نص الرسالة</label><textarea id="test-wa-text" style="border:1.5px solid var(--border);border-radius:9px;padding:8px;font-size:12px;font-family:Cairo,sans-serif;width:100%;resize:vertical;min-height:60px">مرحباً من خالتو! 🎉
+طلبك #1234 جاري التحضير الآن.</textarea></div></div>
+      <button class="btn btn-success" style="width:100%;justify-content:center;margin-top:4px" onclick="sendTestWA()">📤 إرسال WhatsApp تجريبي</button>
+      <div class="test-result" id="test-wa-result" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ EMAIL ════════════════════════════════════════ -->
+<div id="sec-email" class="services" style="display:none">
+
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(52,152,219,.1)">📧</div>
+      <div><div class="service-title">مزودو البريد الإلكتروني</div><div class="service-sub">إرسال إيميلات — تأكيدات وتسويات وترحيب</div></div>
+      <div class="active-badge ab-grey" id="email-active-lbl">غير مفعّل</div>
+    </div>
+    <div class="providers">
+
+      <!-- SendGrid -->
+      <div class="provider" id="prov-email-sendgrid">
+        <div class="provider-hd" onclick="toggleConfig('email-sendgrid')">
+          <div class="prov-logo" style="background:#1A82E2;color:#fff">SG</div>
+          <div><div class="prov-name">SendGrid</div><div class="prov-desc">الأشهر • مجاني حتى 100 إيميل/يوم</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-email-sendgrid"></div><span id="lbl-email-sendgrid" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('email','sendgrid')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-email-sendgrid">
+          <div class="form-row full"><div class="fld"><label>API Key (يبدأ بـ SG.)</label><input type="password" id="email-sendgrid-key" placeholder="SG.xxxxxxxxxx"/></div></div>
+          <div class="form-row">
+            <div class="fld"><label>From Email</label><input id="email-sendgrid-from" placeholder="noreply@khalto.app"/></div>
+            <div class="fld"><label>From Name</label><input id="email-sendgrid-name" placeholder="خالتو"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('email','sendgrid')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('email','sendgrid')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-email-sendgrid"></div>
+        </div>
+      </div>
+
+      <!-- Mailgun -->
+      <div class="provider" id="prov-email-mailgun">
+        <div class="provider-hd" onclick="toggleConfig('email-mailgun')">
+          <div class="prov-logo" style="background:#CC2F3A;color:#fff">MG</div>
+          <div><div class="prov-name">Mailgun</div><div class="prov-desc">مرن • API قوي • مناسب للمطورين</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-email-mailgun"></div><span id="lbl-email-mailgun" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('email','mailgun')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-email-mailgun">
+          <div class="form-row">
+            <div class="fld"><label>API Key</label><input type="password" id="email-mailgun-key" placeholder="key-xxxxxxxx"/></div>
+            <div class="fld"><label>Domain</label><input id="email-mailgun-domain" placeholder="mg.khalto.app"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>From Email</label><input id="email-mailgun-from" placeholder="noreply@khalto.app"/></div>
+            <div class="fld"><label>Region</label><select id="email-mailgun-region"><option value="us">US</option><option value="eu">EU</option></select></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('email','mailgun')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('email','mailgun')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-email-mailgun"></div>
+        </div>
+      </div>
+
+      <!-- Amazon SES -->
+      <div class="provider" id="prov-email-ses">
+        <div class="provider-hd" onclick="toggleConfig('email-ses')">
+          <div class="prov-logo" style="background:#FF9900;color:#fff">SES</div>
+          <div><div class="prov-name">Amazon SES</div><div class="prov-desc">الأرخص • $0.10 / 1000 إيميل</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-email-ses"></div><span id="lbl-email-ses" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('email','ses')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-email-ses">
+          <div class="form-row">
+            <div class="fld"><label>Access Key ID</label><input type="password" id="email-ses-key" placeholder="AKIAXXXXXXXX"/></div>
+            <div class="fld"><label>Secret Access Key</label><input type="password" id="email-ses-secret" placeholder="xxxxxxxx"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>Region</label><input id="email-ses-region" placeholder="me-south-1"/></div>
+            <div class="fld"><label>From Email</label><input id="email-ses-from" placeholder="noreply@khalto.app"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('email','ses')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('email','ses')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-email-ses"></div>
+        </div>
+      </div>
+
+      <!-- Resend -->
+      <div class="provider" id="prov-email-resend">
+        <div class="provider-hd" onclick="toggleConfig('email-resend')">
+          <div class="prov-logo" style="background:#000;color:#fff">Re</div>
+          <div><div class="prov-name">Resend</div><div class="prov-desc">الأحدث • مجاني 3000/شهر • سهل جداً</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-email-resend"></div><span id="lbl-email-resend" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('email','resend')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-email-resend">
+          <div class="form-row full"><div class="fld"><label>API Key (يبدأ بـ re_)</label><input type="password" id="email-resend-key" placeholder="re_xxxxxxxxxx"/></div></div>
+          <div class="form-row">
+            <div class="fld"><label>From Email</label><input id="email-resend-from" placeholder="noreply@khalto.app"/></div>
+            <div class="fld"><label>From Name</label><input id="email-resend-name" placeholder="خالتو"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('email','resend')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('email','resend')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-email-resend"></div>
+        </div>
+      </div>
+
+      <!-- SMTP Custom -->
+      <div class="provider" id="prov-email-smtp">
+        <div class="provider-hd" onclick="toggleConfig('email-smtp')">
+          <div class="prov-logo" style="background:#4A4A4A;color:#fff">SMTP</div>
+          <div><div class="prov-name">SMTP مخصص</div><div class="prov-desc">Gmail / Outlook / أي سيرفر SMTP</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-email-smtp"></div><span id="lbl-email-smtp" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('email','smtp')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-email-smtp">
+          <div class="form-row">
+            <div class="fld"><label>Host</label><input id="email-smtp-host" placeholder="smtp.gmail.com"/></div>
+            <div class="fld"><label>Port</label><input id="email-smtp-port" placeholder="587" type="number"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>Username</label><input id="email-smtp-user" placeholder="your@gmail.com" dir="ltr"/></div>
+            <div class="fld"><label>Password / App Password</label><input type="password" id="email-smtp-pass" placeholder="xxxxxxxx"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>From Email</label><input id="email-smtp-from" placeholder="noreply@khalto.app"/></div>
+            <div class="fld"><label>Encryption</label><select id="email-smtp-enc"><option value="tls">TLS</option><option value="ssl">SSL</option><option value="none">None</option></select></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('email','smtp')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('email','smtp')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-email-smtp"></div>
+        </div>
+      </div>
+
+      <div class="add-provider" onclick="openAddProvider('email')">
+        <div class="add-provider-txt">+ إضافة مزود بريد مخصص</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Email -->
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(52,152,219,.1)">🧪</div>
+      <div><div class="service-title">اختبار البريد الإلكتروني</div></div>
+    </div>
+    <div style="padding:16px">
+      <div class="form-row full"><div class="fld"><label>البريد المستلم</label><input id="test-email-to" placeholder="test@example.com" dir="ltr"/></div></div>
+      <div class="form-row full"><div class="fld"><label>الموضوع</label><input id="test-email-subject" value="اختبار من خالتو 🎉"/></div></div>
+      <div class="form-row full"><div class="fld"><label>المحتوى</label><textarea id="test-email-body" style="border:1.5px solid var(--border);border-radius:9px;padding:8px;font-size:12px;font-family:Cairo,sans-serif;width:100%;resize:vertical;min-height:80px">مرحباً! هذا بريد تجريبي من منصة خالتو للتأكد من أن الإيميل يعمل بشكل صحيح.</textarea></div></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="sendTestEmail()">📤 إرسال بريد تجريبي</button>
+      <div class="test-result" id="test-email-result" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ PAYMENT ═══════════════════════════════════════ -->
+<div id="sec-payment" class="services" style="display:none">
+
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(245,166,35,.1)">💳</div>
+      <div><div class="service-title">بوابات الدفع</div><div class="service-sub">كل دولة تختار بوابتها المستقلة</div></div>
+      <div class="active-badge ab-green" id="pay-active-lbl">متعدد</div>
+    </div>
+    <div class="providers">
+
+      <!-- Tap Payments -->
+      <div class="provider active" id="prov-pay-tap">
+        <div class="provider-hd" onclick="toggleConfig('pay-tap')">
+          <div class="prov-logo" style="background:#1a1a2e;color:#fff">Tap</div>
+          <div><div class="prov-name">Tap Payments</div><div class="prov-desc">🇸🇦🇰🇼🇦🇪 السعودية والخليج • KNET • مدى • Apple Pay</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-tap"></div><span id="lbl-pay-tap" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions">
+            <span class="btn" style="background:rgba(232,96,60,.1);color:var(--primary);cursor:default">SA • KW • AE</span>
+          </div>
+        </div>
+        <div class="prov-config" id="config-pay-tap">
+          <div class="form-row">
+            <div class="fld"><label>Secret Key (sk_live_ أو sk_test_)</label><input type="password" id="pay-tap-secret" placeholder="sk_live_xxxxxxxx"/></div>
+            <div class="fld"><label>Public Key</label><input type="password" id="pay-tap-public" placeholder="pk_live_xxxxxxxx"/></div>
+          </div>
+          <div style="background:var(--bg);border-radius:9px;padding:10px;font-size:11px;margin-bottom:10px">
+            <strong>Webhook URL:</strong> <code id="tap-wh-url" style="direction:ltr;display:inline-block">—</code>
+            <button class="btn btn-outline btn-sm" style="margin-right:8px" onclick="copyText('tap-wh-url')">نسخ</button>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','tap')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('pay','tap')">🧪 اختبار الاتصال</button>
+          </div>
+          <div class="test-result" id="test-pay-tap"></div>
+        </div>
+      </div>
+
+      <!-- Paymob -->
+      <div class="provider active" id="prov-pay-paymob">
+        <div class="provider-hd" onclick="toggleConfig('pay-paymob')">
+          <div class="prov-logo" style="background:#6c5ce7;color:#fff">Pay</div>
+          <div><div class="prov-name">Paymob</div><div class="prov-desc">🇪🇬 مصر • Fawry • Wallet • Visa • Mastercard</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-paymob"></div><span id="lbl-pay-paymob" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions">
+            <span class="btn" style="background:rgba(39,174,96,.1);color:var(--green);cursor:default">EG</span>
+          </div>
+        </div>
+        <div class="prov-config" id="config-pay-paymob">
+          <div class="form-row">
+            <div class="fld"><label>API Key</label><input type="password" id="pay-paymob-key" placeholder="API Key"/></div>
+            <div class="fld"><label>Integration ID</label><input id="pay-paymob-integration" placeholder="Integration ID"/></div>
+          </div>
+          <div class="form-row">
+            <div class="fld"><label>HMAC Secret</label><input type="password" id="pay-paymob-hmac" placeholder="HMAC Secret"/></div>
+            <div class="fld"><label>iFrame ID</label><input id="pay-paymob-iframe" placeholder="iFrame ID"/></div>
+          </div>
+          <div style="background:var(--bg);border-radius:9px;padding:10px;font-size:11px;margin-bottom:10px">
+            <strong>Webhook URL:</strong> <code id="paymob-wh-url" style="direction:ltr;display:inline-block">—</code>
+            <button class="btn btn-outline btn-sm" style="margin-right:8px" onclick="copyText('paymob-wh-url')">نسخ</button>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','paymob')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('pay','paymob')">🧪 اختبار الاتصال</button>
+          </div>
+          <div class="test-result" id="test-pay-paymob"></div>
+        </div>
+      </div>
+
+      <!-- Moyasar -->
+      <div class="provider" id="prov-pay-moyasar">
+        <div class="provider-hd" onclick="toggleConfig('pay-moyasar')">
+          <div class="prov-logo" style="background:#00A86B;color:#fff">MY</div>
+          <div><div class="prov-name">Moyasar</div><div class="prov-desc">🇸🇦 سعودي محلي • مدى • Apple Pay • STC Pay</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-moyasar"></div><span id="lbl-pay-moyasar" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('pay','moyasar')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-pay-moyasar">
+          <div class="form-row">
+            <div class="fld"><label>Secret Key</label><input type="password" id="pay-moyasar-secret" placeholder="sk_live_xxxxxxxx"/></div>
+            <div class="fld"><label>Publishable Key</label><input id="pay-moyasar-public" placeholder="pk_live_xxxxxxxx"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','moyasar')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('pay','moyasar')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-pay-moyasar"></div>
+        </div>
+      </div>
+
+      <!-- HyperPay -->
+      <div class="provider" id="prov-pay-hyperpay">
+        <div class="provider-hd" onclick="toggleConfig('pay-hyperpay')">
+          <div class="prov-logo" style="background:#E31837;color:#fff">HP</div>
+          <div><div class="prov-name">HyperPay</div><div class="prov-desc">🇸🇦🇪🇬 خليج ومصر • Mada • Fawry</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-hyperpay"></div><span id="lbl-pay-hyperpay" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('pay','hyperpay')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-pay-hyperpay">
+          <div class="form-row">
+            <div class="fld"><label>Access Token</label><input type="password" id="pay-hyperpay-token" placeholder="Access Token"/></div>
+            <div class="fld"><label>Entity ID (Visa/MC)</label><input id="pay-hyperpay-entity" placeholder="Entity ID"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','hyperpay')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('pay','hyperpay')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-pay-hyperpay"></div>
+        </div>
+      </div>
+
+      <!-- Stripe -->
+      <div class="provider" id="prov-pay-stripe">
+        <div class="provider-hd" onclick="toggleConfig('pay-stripe')">
+          <div class="prov-logo" style="background:#635BFF;color:#fff">St</div>
+          <div><div class="prov-name">Stripe</div><div class="prov-desc">عالمي • للتوسع الدولي مستقبلاً</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-stripe"></div><span id="lbl-pay-stripe" style="font-size:11px;color:var(--muted)">غير مهيّأ</span></div>
+          <div class="prov-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();setActive('pay','stripe')">تفعيل</button></div>
+        </div>
+        <div class="prov-config" id="config-pay-stripe">
+          <div class="form-row">
+            <div class="fld"><label>Secret Key (sk_live_ أو sk_test_)</label><input type="password" id="pay-stripe-secret" placeholder="sk_live_xxxxxxxx"/></div>
+            <div class="fld"><label>Webhook Secret</label><input type="password" id="pay-stripe-webhook" placeholder="whsec_xxxxxxxx"/></div>
+          </div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','stripe')">💾 حفظ</button>
+            <button class="btn btn-outline" onclick="testProvider('pay','stripe')">🧪 اختبار</button>
+          </div>
+          <div class="test-result" id="test-pay-stripe"></div>
+        </div>
+      </div>
+
+      <!-- Cash -->
+      <div class="provider" id="prov-pay-cash">
+        <div class="provider-hd" onclick="toggleConfig('pay-cash')">
+          <div class="prov-logo" style="background:#27AE60;color:#fff">💵</div>
+          <div><div class="prov-name">كاش عند التسليم</div><div class="prov-desc">بدون إعداد — تفعيل مباشر</div></div>
+          <div class="prov-status"><div class="status-dot dot-grey" id="dot-pay-cash"></div><span id="lbl-pay-cash" style="font-size:11px;color:var(--muted)">غير مفعّل</span></div>
+          <div class="prov-actions"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();enableCash()">تفعيل فوري</button></div>
+        </div>
+        <div class="prov-config" id="config-pay-cash">
+          <div class="form-row full"><div class="fld"><label>الدول التي يُتاح فيها الكاش</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="cash-countries">
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" id="cash-sa" checked/> 🇸🇦 السعودية</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" id="cash-eg" checked/> 🇪🇬 مصر</label>
+            </div>
+          </div></div>
+          <div class="config-actions">
+            <button class="btn btn-primary" onclick="saveProvider('pay','cash')">💾 حفظ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="add-provider" onclick="openAddProvider('pay')">
+        <div class="add-provider-txt">+ إضافة بوابة دفع مخصصة</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment per Country -->
+  <div class="service-card">
+    <div class="service-hd">
+      <div class="service-ico" style="background:rgba(245,166,35,.1)">🌍</div>
+      <div><div class="service-title">الدفع لكل دولة</div><div class="service-sub">اختر بوابة الدفع النشطة لكل دولة</div></div>
+    </div>
+    <div style="padding:16px" id="pay-countries-config">
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px"><span>🇸🇦</span><strong>السعودية</strong></div>
+        </div>
+        <div class="form-row">
+          <div class="fld"><label>البوابة الأساسية</label>
+            <select id="country-sa-gateway"><option value="tap">Tap Payments</option><option value="moyasar">Moyasar</option><option value="stripe">Stripe</option></select>
+          </div>
+          <div class="fld"><label>الكاش عند التسليم</label>
+            <select id="country-sa-cash"><option value="yes">مفعّل ✅</option><option value="no">موقوف ❌</option></select>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px"><span>🇪🇬</span><strong>مصر</strong></div>
+        </div>
+        <div class="form-row">
+          <div class="fld"><label>البوابة الأساسية</label>
+            <select id="country-eg-gateway"><option value="paymob">Paymob</option><option value="hyperpay">HyperPay</option><option value="stripe">Stripe</option></select>
+          </div>
+          <div class="fld"><label>الكاش عند التسليم</label>
+            <select id="country-eg-cash"><option value="yes">مفعّل ✅</option><option value="no">موقوف ❌</option></select>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveCountryPayments()">💾 حفظ إعدادات الدفع</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Custom Provider Modal -->
+<div class="modal-overlay" id="modal-add-provider">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">+ إضافة مزود مخصص</div>
+      <button class="modal-close" onclick="closeAddProvider()">✕</button>
+    </div>
+    <input type="hidden" id="add-prov-service"/>
+    <div class="form-row full"><div class="fld"><label>اسم المزود</label><input id="add-prov-name" placeholder="مثال: Unifonic Custom"/></div></div>
+    <div class="form-row">
+      <div class="fld"><label>API URL</label><input id="add-prov-url" placeholder="https://api.provider.com" dir="ltr"/></div>
+      <div class="fld"><label>نوع المصادقة</label>
+        <select id="add-prov-auth"><option value="bearer">Bearer Token</option><option value="basic">Basic Auth</option><option value="apikey">API Key Header</option></select>
+      </div>
+    </div>
+    <div class="form-row full"><div class="fld"><label>API Key / Token</label><input type="password" id="add-prov-key" placeholder="xxxxxxxx"/></div></div>
+    <div class="form-row full"><div class="fld"><label>ملاحظات</label><input id="add-prov-notes" placeholder="اختياري"/></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddProvider()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveCustomProvider()">✅ إضافة</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────
+const API_BASE = localStorage.getItem('khalto_api') || 'https://khaltoapp-wotek.ondigitalocean.app/api/v1';
+let activeProviders = JSON.parse(localStorage.getItem('khalto_active_providers') || '{}');
+let savedConfigs    = JSON.parse(localStorage.getItem('khalto_provider_configs') || '{}');
+
+// ── Init ──────────────────────────────────────────────
+window.onload = () => {
+  loadSavedConfigs();
+  setWebhookURLs();
+  // Show active state
+  Object.entries(activeProviders).forEach(([svc, prov]) => {
+    markActive(svc, prov);
+  });
+};
+
+function setWebhookURLs() {
+  const base = API_BASE.replace('/api/v1','');
+  const tapEl    = document.getElementById('tap-wh-url');
+  const paymobEl = document.getElementById('paymob-wh-url');
+  if (tapEl)    tapEl.textContent    = base + '/api/v1/payments/webhook/tap';
+  if (paymobEl) paymobEl.textContent = base + '/api/v1/payments/webhook/paymob';
+}
+
+// ── Tabs ──────────────────────────────────────────────
+function showSection(sec, el) {
+  ['sms','whatsapp','email','payment'].forEach(s => {
+    document.getElementById('sec-' + s).style.display = s === sec ? 'grid' : 'none';
+  });
+  document.querySelectorAll('.top-tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── Toggle config ─────────────────────────────────────
+function toggleConfig(id) {
+  const el = document.getElementById('config-' + id);
+  el.classList.toggle('open');
+}
+
+// ── Set Active Provider ───────────────────────────────
+function setActive(service, provider) {
+  activeProviders[service] = provider;
+  localStorage.setItem('khalto_active_providers', JSON.stringify(activeProviders));
+  markActive(service, provider);
+  toast(`✅ تم تفعيل ${provider} كمزود ${service}`);
+}
+
+function markActive(service, provider) {
+  // Remove active from all providers in this service
+  document.querySelectorAll(`[id^="prov-${service}-"]`).forEach(el => {
+    el.classList.remove('active');
+    const btn = el.querySelector('.prov-actions .btn');
+    if (btn) { btn.textContent = 'تفعيل'; btn.className = 'btn btn-outline btn-sm'; }
+  });
+  // Mark selected as active
+  const provEl = document.getElementById(`prov-${service}-${provider}`);
+  if (provEl) {
+    provEl.classList.add('active');
+    const btn = provEl.querySelector('.prov-actions .btn');
+    if (btn) { btn.textContent = '✅ نشط'; btn.className = 'btn btn-success btn-sm'; }
+  }
+  // Update label
+  const labelMap = {
+    sms: 'sms-active-lbl', wa: 'wa-active-lbl',
+    email: 'email-active-lbl', pay: 'pay-active-lbl'
+  };
+  const lbl = document.getElementById(labelMap[service]);
+  if (lbl) {
+    lbl.textContent = provider + ' نشط';
+    lbl.className = 'active-badge ab-green';
+  }
+}
+
+// ── Save Provider Config ──────────────────────────────
+function saveProvider(service, provider) {
+  const key = `${service}-${provider}`;
+  const config = {};
+
+  // Collect all inputs in this provider's config
+  const configEl = document.getElementById(`config-${key}`);
+  configEl.querySelectorAll('input, select').forEach(inp => {
+    if (inp.id && inp.id !== `config-${key}`) {
+      config[inp.id] = inp.value;
+    }
+  });
+
+  savedConfigs[key] = config;
+  localStorage.setItem('khalto_provider_configs', JSON.stringify(savedConfigs));
+
+  // Update status dot
+  const dot  = document.getElementById(`dot-${key}`);
+  const lbl  = document.getElementById(`lbl-${key}`);
+  const hasValues = Object.values(config).some(v => v && v.length > 3);
+  if (dot) dot.className = 'status-dot ' + (hasValues ? 'dot-green' : 'dot-grey');
+  if (lbl) lbl.textContent = hasValues ? 'مهيّأ ✅' : 'غير مهيّأ';
+
+  toast(`✅ تم حفظ إعدادات ${provider}`);
+}
+
+function loadSavedConfigs() {
+  Object.entries(savedConfigs).forEach(([key, config]) => {
+    Object.entries(config).forEach(([inputId, value]) => {
+      const el = document.getElementById(inputId);
+      if (el) el.value = value;
+    });
+    // Update dot
+    const dot = document.getElementById(`dot-${key}`);
+    const lbl = document.getElementById(`lbl-${key}`);
+    const hasValues = Object.values(config).some(v => v && v.length > 3);
+    if (dot) dot.className = 'status-dot ' + (hasValues ? 'dot-green' : 'dot-grey');
+    if (lbl) lbl.textContent = hasValues ? 'مهيّأ ✅' : 'غير مهيّأ';
+  });
+}
+
+// ── Test Provider ─────────────────────────────────────
+async function testProvider(service, provider) {
+  const key = `${service}-${provider}`;
+  const el  = document.getElementById(`test-${key}`);
+  el.style.display = 'block';
+  el.className = 'test-result';
+  el.textContent = '⏳ جاري الاختبار...';
+
+  try {
+    const token = localStorage.getItem('kh_token') || '';
+    let endpoint = '';
+    if (service === 'sms')   endpoint = '/notifications/sms/status';
+    if (service === 'email') endpoint = '/notifications/email/status';
+    if (service === 'pay' && provider === 'tap')    endpoint = '/payments/tap/status';
+    if (service === 'pay' && provider === 'paymob') endpoint = '/payments/paymob/status';
+
+    if (endpoint) {
+      const res = await fetch(API_BASE + endpoint, {
+        headers: { 'Authorization': 'Bearer ' + token, 'X-Mobile-App': 'true' }
+      });
+      const data = await res.json();
+      if (data.configured || data.ok) {
+        el.className = 'test-result test-ok';
+        el.textContent = '✅ الاتصال ناجح — المزود يعمل بشكل صحيح';
+      } else {
+        el.className = 'test-result test-fail';
+        el.textContent = '❌ ' + (data.error || 'المزود غير متصل — تحقق من المفاتيح');
+      }
+    } else {
+      // For providers without API check, just verify config is saved
+      const config = savedConfigs[key] || {};
+      const hasValues = Object.values(config).some(v => v && v.length > 3);
+      if (hasValues) {
+        el.className = 'test-result test-ok';
+        el.textContent = '✅ الإعدادات محفوظة — سيتم التحقق عند أول استخدام';
+      } else {
+        el.className = 'test-result test-fail';
+        el.textContent = '❌ أدخل البيانات أولاً ثم احفظ';
+      }
+    }
+  } catch(e) {
+    el.className = 'test-result test-fail';
+    el.textContent = '❌ خطأ في الاتصال: ' + e.message;
+  }
+}
+
+// ── Test SMS ──────────────────────────────────────────
+async function sendTestSMS() {
+  const phone = document.getElementById('test-sms-phone').value;
+  const text  = document.getElementById('test-sms-text').value;
+  const el    = document.getElementById('test-sms-result');
+  if (!phone) { showResult(el, false, 'أدخل رقم الهاتف'); return; }
+
+  el.style.display = 'block';
+  el.className = 'test-result';
+  el.textContent = '⏳ جاري الإرسال...';
+
+  const token = localStorage.getItem('kh_token') || '';
+  try {
+    const res  = await fetch(API_BASE + '/notifications/sms/test', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, 'X-Mobile-App':'true' },
+      body: JSON.stringify({ phone, message: text })
+    });
+    const data = await res.json();
+    showResult(el, data.ok || data.sent, data.ok ? 'تم إرسال SMS بنجاح! ✅' : (data.error || 'فشل الإرسال'));
+  } catch(e) { showResult(el, false, e.message); }
+}
+
+// ── Test WhatsApp ─────────────────────────────────────
+async function sendTestWA() {
+  const phone = document.getElementById('test-wa-phone').value;
+  const text  = document.getElementById('test-wa-text').value;
+  const el    = document.getElementById('test-wa-result');
+  if (!phone) { showResult(el, false, 'أدخل رقم الهاتف'); return; }
+  el.style.display = 'block'; el.textContent = '⏳ جاري الإرسال...';
+  const token = localStorage.getItem('kh_token') || '';
+  try {
+    const res  = await fetch(API_BASE + '/notifications/whatsapp/test', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, 'X-Mobile-App':'true' },
+      body: JSON.stringify({ phone, message: text })
+    });
+    const data = await res.json();
+    showResult(el, data.ok||data.sent, data.ok ? 'تم إرسال WhatsApp بنجاح! ✅' : (data.error||'فشل الإرسال'));
+  } catch(e) { showResult(el, false, e.message); }
+}
+
+// ── Test Email ────────────────────────────────────────
+async function sendTestEmail() {
+  const to      = document.getElementById('test-email-to').value;
+  const subject = document.getElementById('test-email-subject').value;
+  const body    = document.getElementById('test-email-body').value;
+  const el      = document.getElementById('test-email-result');
+  if (!to) { showResult(el, false, 'أدخل البريد الإلكتروني'); return; }
+  el.style.display = 'block'; el.textContent = '⏳ جاري الإرسال...';
+  const token = localStorage.getItem('kh_token') || '';
+  try {
+    const res  = await fetch(API_BASE + '/notifications/email/test', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, 'X-Mobile-App':'true' },
+      body: JSON.stringify({ to, subject, body })
+    });
+    const data = await res.json();
+    showResult(el, data.ok||data.sent, data.ok ? 'تم إرسال البريد بنجاح! ✅' : (data.error||'فشل الإرسال'));
+  } catch(e) { showResult(el, false, e.message); }
+}
+
+// ── Cash ──────────────────────────────────────────────
+function enableCash() {
+  setActive('pay', 'cash');
+  document.getElementById('config-pay-cash').classList.add('open');
+}
+
+// ── Country Payments ──────────────────────────────────
+function saveCountryPayments() {
+  const settings = {
+    SA: { gateway: document.getElementById('country-sa-gateway').value, cash: document.getElementById('country-sa-cash').value },
+    EG: { gateway: document.getElementById('country-eg-gateway').value, cash: document.getElementById('country-eg-cash').value },
+  };
+  localStorage.setItem('khalto_country_payments', JSON.stringify(settings));
+  toast('✅ تم حفظ إعدادات الدفع لكل دولة');
+}
+
+// ── SMS Templates ─────────────────────────────────────
+const templates = {
+  otp:           'رمز التحقق الخاص بك في خالتو: {code} — صالح 5 دقائق. لا تشاركه مع أحد.',
+  order_confirm: 'مرحباً {name}! ✅ تم استلام طلبك #{order_number} بقيمة {amount} {currency}. سيتم التحضير قريباً.',
+  order_ready:   'طلبك #{order_number} جاهز للاستلام! 🍳 المندوب في طريقه إليك.',
+  delivered:     'تم توصيل طلبك #{order_number} بنجاح! 🎉 قيّم تجربتك: {rating_link}',
+  settlement:    'مرحباً {name}! تم تحويل {amount} {currency} إلى حسابك. 💰 شكراً من خالتو!',
+  welcome:       'أهلاً {name}! 🎉 مرحباً بك في خالتو — وجباتك البيتية المفضلة بين يديك.',
+};
+
+function previewTemplate() {
+  const key = document.getElementById('sms-tpl-select').value;
+  document.getElementById('sms-tpl-preview').textContent = templates[key] || '—';
+}
+
+// ── Add Custom Provider ───────────────────────────────
+function openAddProvider(service) {
+  document.getElementById('add-prov-service').value = service;
+  document.getElementById('modal-add-provider').classList.add('open');
+}
+function closeAddProvider() {
+  document.getElementById('modal-add-provider').classList.remove('open');
+}
+function saveCustomProvider() {
+  const service = document.getElementById('add-prov-service').value;
+  const name    = document.getElementById('add-prov-name').value;
+  if (!name) { toast('أدخل اسم المزود', 'error'); return; }
+  toast(`✅ تم إضافة ${name} — ستظهر في القائمة`);
+  closeAddProvider();
+}
+
+// ── Copy text ─────────────────────────────────────────
+function copyText(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent);
+  toast('✅ تم النسخ');
+}
+
+// ── Helpers ───────────────────────────────────────────
+function showResult(el, success, msg) {
+  el.style.display = 'block';
+  el.className = 'test-result ' + (success ? 'test-ok' : 'test-fail');
+  el.textContent = msg;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

@@ -442,13 +442,16 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
 
     <!-- ── COUNTRIES ── -->
     <div class="page" id="p-countries">
-      <div class="card">
-        <div class="card-hd">
-          <div class="card-title">🌍 الدول والمدن</div>
-          <button class="card-act" onclick="openModal('modal-country')">+ إضافة دولة</button>
-        </div>
-        <div id="countries-tbl"><div class="loader"><div class="spin"></div>جاري التحميل...</div></div>
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">🌍</div><div class="kpi-badge">مفعّل</div></div><div class="kpi-val" id="ck-active">—</div><div class="kpi-lbl">دول نشطة</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">💱</div><div class="kpi-badge">عملات</div></div><div class="kpi-val" id="ck-currencies">—</div><div class="kpi-lbl">عملات مختلفة</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">💳</div><div class="kpi-badge">بوابات</div></div><div class="kpi-val" id="ck-gateways">—</div><div class="kpi-lbl">بوابات دفع</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">🏙️</div><div class="kpi-badge">مدن</div></div><div class="kpi-val" id="ck-cities">—</div><div class="kpi-lbl">مدن مسجّلة</div></div>
       </div>
+      <div id="countries-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:16px">
+        <div class="loader"><div class="spin"></div>جاري التحميل...</div>
+      </div>
+      <button class="btn btn-primary" onclick="resetCountryForm();openModal('modal-country-full')">+ إضافة دولة جديدة</button>
     </div>
 
   </div><!-- /content -->
@@ -543,27 +546,92 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
   </div>
 </div>
 
-<!-- Country Modal -->
-<div class="modal-overlay" id="modal-country">
-  <div class="modal">
-    <div class="modal-hd"><div class="modal-title">🌍 إضافة دولة</div><button class="modal-close" onclick="closeModal('modal-country')">✕</button></div>
-    <div class="form-row">
-      <div class="fld"><label>اسم الدولة (عربي)</label><input id="ct-name-ar" placeholder="المملكة العربية السعودية"/></div>
-      <div class="fld"><label>اسم الدولة (إنجليزي)</label><input id="ct-name-en" placeholder="Saudi Arabia"/></div>
+<!-- Country Full Modal -->
+<div class="modal-overlay" id="modal-country-full">
+  <div class="modal" style="width:680px;max-width:98vw">
+    <div class="modal-hd">
+      <div class="modal-title" id="country-modal-title">🌍 إضافة دولة جديدة</div>
+      <button class="modal-close" onclick="closeModal('modal-country-full')">✕</button>
     </div>
-    <div class="form-row">
-      <div class="fld"><label>رمز الدولة</label><input id="ct-code" placeholder="SA" maxlength="3" style="text-transform:uppercase"/></div>
-      <div class="fld"><label>العملة</label><input id="ct-currency" placeholder="SAR"/></div>
+    <input type="hidden" id="edit-country-id"/>
+    <div class="tabs" style="margin-bottom:16px">
+      <div class="tab on" onclick="switchCountryTab('basic',this)">معلومات أساسية</div>
+      <div class="tab" onclick="switchCountryTab('financial',this)">الإعدادات المالية</div>
+      <div class="tab" onclick="switchCountryTab('delivery',this)">التوصيل</div>
+      <div class="tab" onclick="switchCountryTab('payouts',this)">المدفوعات</div>
     </div>
-    <div class="form-row">
-      <div class="fld"><label>كود الهاتف</label><input id="ct-phone" placeholder="+966"/></div>
-      <div class="fld"><label>اللغة الافتراضية</label>
-        <select id="ct-lang"><option value="ar">العربية</option><option value="en">English</option></select>
+    <div id="ctab-basic">
+      <div class="form-row">
+        <div class="fld"><label>اسم الدولة (عربي) *</label><input id="c-name-ar" placeholder="مصر"/></div>
+        <div class="fld"><label>اسم الدولة (إنجليزي)</label><input id="c-name-en" placeholder="Egypt"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>رمز الدولة * (ISO)</label><input id="c-code" placeholder="EG" maxlength="3" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/></div>
+        <div class="fld"><label>كود الهاتف</label><input id="c-phone" placeholder="+20"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>العملة *</label><input id="c-currency" placeholder="EGP"/></div>
+        <div class="fld"><label>رمز العملة</label><input id="c-currency-sym" placeholder="ج.م"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>اللغة الافتراضية</label>
+          <select id="c-lang"><option value="ar">العربية</option><option value="en">English</option></select>
+        </div>
+        <div class="fld"><label>بوابة الدفع</label>
+          <select id="c-gateway">
+            <option value="tap">Tap Payments (خليجي)</option>
+            <option value="paymob">Paymob (مصر)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="ctab-financial" style="display:none">
+      <div class="alert alert-info" style="font-size:12px">💡 هذه الإعدادات تنطبق على جميع الطلبات في هذه الدولة</div>
+      <div class="form-row">
+        <div class="fld"><label>عمولة المنصة %</label><input type="number" id="c-commission" placeholder="15" min="0" max="50" step="0.5" oninput="updatePayoutBar();calcExample()"/><small style="color:var(--muted);font-size:11px">النسبة التي تأخذها المنصة من كل طلب</small></div>
+        <div class="fld"><label>ضريبة VAT %</label><input type="number" id="c-tax" placeholder="14" min="0" max="30" step="0.5" oninput="calcExample()"/><small style="color:var(--muted);font-size:11px">مصر: 14% — السعودية: 15%</small></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>الحد الأدنى للطلب</label><input type="number" id="c-min-order" placeholder="100" min="0"/></div>
+        <div class="fld"><label>تكرار التسوية (أيام)</label><input type="number" id="c-settlement" placeholder="7" min="1" max="30"/></div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:8px">
+        <div style="font-size:12px;font-weight:800;margin-bottom:10px">🧮 حاسبة توضيحية</div>
+        <div class="form-row"><div class="fld"><label>مثال: قيمة الطلب</label><input type="number" id="calc-example" placeholder="100" oninput="calcExample()"/></div></div>
+        <div id="calc-example-result" style="font-size:12px;color:var(--muted)">أدخل قيمة لترى التوزيع</div>
+      </div>
+    </div>
+    <div id="ctab-delivery" style="display:none">
+      <div class="form-row">
+        <div class="fld"><label>رسوم التوصيل الأساسية</label><input type="number" id="c-del-base" placeholder="25" min="0" step="0.5"/></div>
+        <div class="fld"><label>رسوم إضافية / كم</label><input type="number" id="c-del-km" placeholder="2" min="0" step="0.1"/></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>أقصى مسافة توصيل (كم)</label><input type="number" id="c-del-max" placeholder="15" min="1"/></div>
+        <div class="fld"><label>أقصى مضاعف Surge</label><input type="number" id="c-surge" placeholder="2.5" min="1" max="5" step="0.1"/></div>
+      </div>
+    </div>
+    <div id="ctab-payouts" style="display:none">
+      <div class="alert alert-warn" style="font-size:12px">⚠️ هذه النسب تحدد كم يحصل الشيف والمندوب من كل طلب</div>
+      <div class="form-row">
+        <div class="fld"><label>نسبة الشيف %</label><input type="number" id="c-chef-pct" placeholder="85" min="50" max="95" step="1" oninput="updatePayoutBar()"/></div>
+        <div class="fld"><label>نسبة المندوب من رسوم التوصيل %</label><input type="number" id="c-courier-pct" placeholder="80" min="50" max="95" step="1"/></div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:8px">
+        <div style="font-size:12px;font-weight:800;margin-bottom:10px">📊 توزيع الإيرادات</div>
+        <div style="height:20px;border-radius:8px;overflow:hidden;display:flex;margin-bottom:8px;background:var(--border)">
+          <div id="bar-chef" style="background:#27AE60;height:100%;width:85%;transition:.3s"></div>
+          <div id="bar-platform" style="background:#E8603C;height:100%;width:15%;transition:.3s"></div>
+        </div>
+        <div style="display:flex;gap:12px;font-size:11px">
+          <span>🟢 الشيف: <strong id="lbl-chef">85%</strong></span>
+          <span>🟠 المنصة: <strong id="lbl-platform">15%</strong></span>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-country')">إلغاء</button>
-      <button class="btn btn-primary" onclick="createCountry()">✅ إضافة الدولة</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-country-full')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveCountry()">💾 حفظ الدولة</button>
     </div>
   </div>
 </div>

@@ -1,6 +1,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 process.env.PGSSLMODE = 'no-verify';
 require('dotenv').config();
+const path = require('path');
 const express       = require('express');
 const cors          = require('cors');
 const compression   = require('compression');
@@ -64,7 +65,6 @@ const io         = new Server(httpServer, {
 app.set('trust proxy', 1);
 app.set('io', io);
 // -- Dashboard static files --
-const path = require('path');
 app.use('/khalto-api-dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
 
 // ── Core middleware ───────────────────────────────────────

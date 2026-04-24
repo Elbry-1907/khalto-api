@@ -12,6 +12,9 @@
  * POST   /api/v1/notifications/broadcast    — إرسال لشريحة
  * GET    /api/v1/notifications/log          — سجل الإرسال
  * GET    /api/v1/notifications/stats        — إحصائيات
+ * POST   /api/v1/notifications/sms/test     — اختبر مزود SMS النشط
+ * POST   /api/v1/notifications/whatsapp/test — اختبر مزود WhatsApp النشط
+ * POST   /api/v1/notifications/email/test   — اختبر مزود البريد النشط
  */
 
 const router = require('express').Router();
@@ -20,8 +23,10 @@ const db     = require('../db');
 const logger = require('../utils/logger');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendToUser }  = require('../services/push.service');
-const { email }       = require('../services/email.service');
-const { sms }         = require('../services/sms.service');
+const { sendEmail, email }       = require('../services/email.service');
+const { sendSMS, sms }         = require('../services/sms.service');
+const { resolveActiveProvider } = require('../services/provider-resolver.service');
+const { testWhatsApp } = require('../services/provider-tester.service');
 
 // ── Render template vars ──────────────────────────────────
 const render = (text, vars = {}) => {
@@ -293,6 +298,83 @@ router.get('/stats', authenticate, requireRole('super_admin','marketing','operat
       templates_count: parseInt(templates?.c||0),
     });
   } catch(err){ next(err); }
+});
+
+// ═══════════════════════════════════════════════════════════
+// Provider Test Endpoints (for dashboard providers page)
+// ═══════════════════════════════════════════════════════════
+
+router.post('/sms/test', authenticate, requireRole('super_admin', 'operations', 'marketing'), async (req, res, next) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone) return res.json({ ok: false, error: 'رقم الهاتف مطلوب' });
+
+    const body = message || `اختبار من خالتو 🎉 ${new Date().toLocaleString('ar')}`;
+    const result = await sendSMS({ to: phone, body });
+
+    if (result.success) {
+      return res.json({ ok: true, message: 'تم الإرسال بنجاح', provider: result.provider || 'fallback' });
+    } else {
+      return res.json({ ok: false, error: result.error });
+    }
+  } catch (err) {
+    logger.error('SMS test failed', { error: err.message });
+    return res.json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/whatsapp/test', authenticate, requireRole('super_admin', 'operations', 'marketing'), async (req, res, next) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone) return res.json({ ok: false, error: 'رقم الهاتف مطلوب' });
+
+    // Try to infer country from phone format
+    let countryId = null;
+    const countryCode = phone.startsWith('+966') || phone.startsWith('966') ? 'SA' : 'EG';
+    try {
+      const country = await db('countries').where({ code: countryCode }).first('id');
+      countryId = country?.id;
+    } catch (err) {
+      logger.warn('Failed to resolve country from phone', { phone });
+    }
+
+    const provider = await resolveActiveProvider('whatsapp', countryId);
+    if (!provider) {
+      return res.json({ ok: false, error: 'لا يوجد مزود WhatsApp نشط' });
+    }
+
+    const body = message || `اختبار WhatsApp من خالتو 🎉`;
+    try {
+      const result = await testWhatsApp(provider.provider_key, provider.config, phone, body);
+      return res.json({ ok: true, message: result.message, provider: provider.provider_key });
+    } catch (err) {
+      return res.json({ ok: false, error: err.message });
+    }
+  } catch (err) {
+    logger.error('WhatsApp test failed', { error: err.message });
+    return res.json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/email/test', authenticate, requireRole('super_admin', 'operations', 'marketing'), async (req, res, next) => {
+  try {
+    const { to, subject, body } = req.body;
+    if (!to) return res.json({ ok: false, error: 'البريد الإلكتروني مطلوب' });
+
+    const emailSubject = subject || 'اختبار من خالتو 🎉';
+    const emailBody = body || `<p dir="rtl" style="font-family:'Cairo',sans-serif;line-height:1.6">هذا بريد تجريبي من منصة خالتو للتأكد من أن الإيميل يعمل بشكل صحيح.</p><p style="color:#888;font-size:12px">${new Date().toLocaleString('ar')}</p>`;
+
+    const result = await sendEmail({ to, subject: emailSubject, html: emailBody });
+
+    if (result.success) {
+      return res.json({ ok: true, message: 'تم الإرسال بنجاح', provider: result.provider || 'fallback' });
+    } else {
+      return res.json({ ok: false, error: result.error });
+    }
+  } catch (err) {
+    logger.error('Email test failed', { error: err.message });
+    return res.json({ ok: false, error: err.message });
+  }
 });
 
 module.exports = router;

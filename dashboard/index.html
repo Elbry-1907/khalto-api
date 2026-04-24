@@ -224,6 +224,9 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
   <div class="sb-sec">Config</div>
   <div class="si" onclick="go('branding',this)"><div class="si-ico">🎨</div><div class="si-lbl">البراندينج</div></div>
   <div class="si" onclick="go('countries',this)"><div class="si-ico">🌍</div><div class="si-lbl">الدول والمدن</div></div>
+  <div class="si" onclick="go('communications',this)"><div class="si-ico">📱</div><div class="si-lbl">SMS / WA / Email</div></div>
+  <div class="si" onclick="go('gateways',this)"><div class="si-ico">💳</div><div class="si-lbl">بوابات الدفع</div></div>
+  <div class="si" onclick="go('settings',this)"><div class="si-ico">⚙️</div><div class="si-lbl">إعدادات النظام</div></div>
 
   <div class="sb-logout" onclick="doLogout()">
     <div class="si-ico">🚪</div><span>تسجيل الخروج</span>
@@ -452,6 +455,355 @@ body{font-family:"Cairo",sans-serif;background:var(--bg);color:var(--text);displ
         <div class="loader"><div class="spin"></div>جاري التحميل...</div>
       </div>
       <button class="btn btn-primary" onclick="resetCountryForm();openModal('modal-country-full')">+ إضافة دولة جديدة</button>
+    </div>
+
+
+    <!-- ── COMMUNICATIONS ── -->
+    <div class="page" id="p-communications">
+      <div class="tabs">
+        <div class="tab on" onclick="switchCommTab('sms',this)">📱 SMS</div>
+        <div class="tab" onclick="switchCommTab('whatsapp',this)">💬 WhatsApp</div>
+        <div class="tab" onclick="switchCommTab('email',this)">📧 Email</div>
+        <div class="tab" onclick="switchCommTab('templates',this)">📋 القوالب</div>
+      </div>
+
+      <!-- SMS Tab -->
+      <div id="comm-sms">
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📱 إعداد Twilio SMS</div><button class="card-act" onclick="testSMS()">🧪 اختبار الإرسال</button></div>
+            <div class="card-body">
+              <div class="alert alert-info">🔒 المفاتيح محفوظة في Environment Variables على DigitalOcean</div>
+              <div id="sms-status"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+                <div style="font-size:12px;font-weight:800;margin-bottom:10px">🧪 اختبار إرسال SMS</div>
+                <div class="form-row">
+                  <div class="fld"><label>رقم الهاتف (مع الكود)</label><input id="test-sms-phone" placeholder="+966501234567" dir="ltr"/></div>
+                  <div class="fld"><label>الرسالة</label><input id="test-sms-msg" value="مرحباً من خالتو! 🎉"/></div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="testSMS()">📤 إرسال رسالة تجريبية</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📊 إحصائيات SMS</div></div>
+            <div class="card-body" id="sms-stats">
+              <div class="stat-row"><span>رسائل اليوم</span><div class="stat-val" id="sms-today">—</div></div>
+              <div class="stat-row"><span>رسائل الأسبوع</span><div class="stat-val" id="sms-week">—</div></div>
+              <div class="stat-row"><span>رسائل OTP</span><div class="stat-val" id="sms-otp">—</div></div>
+              <div class="stat-row"><span>معدل النجاح</span><div class="stat-val" id="sms-rate" style="color:var(--green)">—</div></div>
+              <div style="margin-top:14px;background:var(--bg);border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">أرقام الإرسال</div>
+                <div class="stat-row"><span>🇸🇦 السعودية</span><div class="stat-val" id="twilio-sa">—</div></div>
+                <div class="stat-row"><span>🇪🇬 مصر</span><div class="stat-val" id="twilio-eg">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp Tab -->
+      <div id="comm-whatsapp" style="display:none">
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">💬 Twilio WhatsApp</div><button class="card-act" onclick="testWhatsApp()">🧪 اختبار</button></div>
+            <div class="card-body">
+              <div class="alert alert-warn">⚠️ WhatsApp Business API يحتاج موافقة Meta مسبقاً</div>
+              <div id="wa-status"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+                <div class="form-row">
+                  <div class="fld"><label>رقم الهاتف</label><input id="test-wa-phone" placeholder="+966501234567" dir="ltr"/></div>
+                  <div class="fld"><label>الرسالة</label><input id="test-wa-msg" value="مرحباً من خالتو! 🎉"/></div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="testWhatsApp()">📤 إرسال واتساب تجريبي</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📊 إحصائيات WhatsApp</div></div>
+            <div class="card-body">
+              <div class="stat-row"><span>رسائل اليوم</span><div class="stat-val">—</div></div>
+              <div class="stat-row"><span>معدل القراءة</span><div class="stat-val" style="color:var(--green)">—</div></div>
+              <div class="stat-row"><span>رسائل الطلبات</span><div class="stat-val">—</div></div>
+              <div class="stat-row"><span>رسائل التسويات</span><div class="stat-val">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email Tab -->
+      <div id="comm-email" style="display:none">
+        <div class="g2">
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📧 SendGrid Email</div><button class="card-act" onclick="testEmail()">🧪 اختبار</button></div>
+            <div class="card-body">
+              <div class="alert alert-info">🔒 SENDGRID_API_KEY محفوظ في Environment Variables</div>
+              <div id="email-status"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+                <div class="form-row">
+                  <div class="fld"><label>البريد الإلكتروني</label><input id="test-email-to" placeholder="test@example.com" dir="ltr"/></div>
+                  <div class="fld"><label>الموضوع</label><input id="test-email-subject" value="اختبار من خالتو 🎉"/></div>
+                </div>
+                <div class="fld" style="margin-bottom:10px"><label>المحتوى</label><textarea id="test-email-body">مرحباً! هذا بريد تجريبي من منصة خالتو.</textarea></div>
+                <button class="btn btn-primary btn-full" onclick="testEmail()">📤 إرسال بريد تجريبي</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><div class="card-title">📊 إحصائيات Email</div></div>
+            <div class="card-body">
+              <div class="stat-row"><span>رسائل اليوم</span><div class="stat-val">—</div></div>
+              <div class="stat-row"><span>معدل الوصول</span><div class="stat-val" style="color:var(--green)">—</div></div>
+              <div class="stat-row"><span>معدل الفتح</span><div class="stat-val">—</div></div>
+              <div class="stat-row"><span>المرسل</span><div class="stat-val" id="smtp-from-display">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates Tab -->
+      <div id="comm-templates" style="display:none">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">📋 قوالب الرسائل</div>
+            <button class="card-act" onclick="saveTemplates()">💾 حفظ القوالب</button>
+          </div>
+          <div class="card-body">
+            <div class="tabs" style="margin-bottom:16px">
+              <div class="tab on" onclick="switchTplTab('otp',this)">🔐 OTP</div>
+              <div class="tab" onclick="switchTplTab('order',this)">📦 الطلب</div>
+              <div class="tab" onclick="switchTplTab('delivery',this)">🛵 التوصيل</div>
+              <div class="tab" onclick="switchTplTab('settlement',this)">💰 التسوية</div>
+              <div class="tab" onclick="switchTplTab('welcome',this)">👋 الترحيب</div>
+            </div>
+
+            <div id="tpl-otp">
+              <div class="alert alert-info">💡 استخدم {code} لرمز OTP و {name} للاسم</div>
+              <div class="form-row">
+                <div class="fld"><label>SMS (عربي)</label><textarea id="tpl-otp-sms-ar">رمز التحقق الخاص بك في خالتو: {code} — صالح لمدة 5 دقائق. لا تشاركه مع أحد.</textarea></div>
+                <div class="fld"><label>SMS (إنجليزي)</label><textarea id="tpl-otp-sms-en">Your Khalto verification code: {code} — Valid for 5 minutes. Do not share it.</textarea></div>
+              </div>
+            </div>
+
+            <div id="tpl-order" style="display:none">
+              <div class="alert alert-info">💡 استخدم {order_number} و {amount} و {name}</div>
+              <div class="form-row">
+                <div class="fld"><label>SMS (عربي)</label><textarea id="tpl-order-sms-ar">مرحباً {name}! تم استلام طلبك #{order_number} بقيمة {amount}. سيتم تحضيره قريباً 🍳</textarea></div>
+                <div class="fld"><label>SMS (إنجليزي)</label><textarea id="tpl-order-sms-en">Hi {name}! Your order #{order_number} worth {amount} has been received. Preparing soon 🍳</textarea></div>
+              </div>
+              <div class="form-row">
+                <div class="fld"><label>WhatsApp (عربي)</label><textarea id="tpl-order-wa-ar">🎉 تم تأكيد طلبك!
+رقم الطلب: #{order_number}
+المبلغ: {amount}
+الوقت المتوقع: 30-45 دقيقة</textarea></div>
+                <div class="fld"><label>Email Subject (عربي)</label><input id="tpl-order-email-subject" value="تم تأكيد طلبك #{order_number} 🎉"/></div>
+              </div>
+            </div>
+
+            <div id="tpl-delivery" style="display:none">
+              <div class="form-row">
+                <div class="fld"><label>SMS عند التوصيل (عربي)</label><textarea id="tpl-del-sms-ar">تم توصيل طلبك #{order_number} بنجاح! 🎉 شكراً لاستخدامك خالتو. قيّم تجربتك: {rating_link}</textarea></div>
+                <div class="fld"><label>SMS عند التوصيل (إنجليزي)</label><textarea id="tpl-del-sms-en">Your order #{order_number} has been delivered! 🎉 Rate your experience: {rating_link}</textarea></div>
+              </div>
+            </div>
+
+            <div id="tpl-settlement" style="display:none">
+              <div class="form-row">
+                <div class="fld"><label>SMS للشيف (عربي)</label><textarea id="tpl-set-sms-ar">مرحباً {name}! تم تحويل مبلغ {amount} {currency} إلى حسابك. 💰 شكراً لك من خالتو!</textarea></div>
+                <div class="fld"><label>Email Subject (عربي)</label><input id="tpl-set-email-subject" value="تم تحويل مستحقاتك 💰"/></div>
+              </div>
+            </div>
+
+            <div id="tpl-welcome" style="display:none">
+              <div class="form-row">
+                <div class="fld"><label>SMS ترحيب (عربي)</label><textarea id="tpl-wel-sms-ar">أهلاً {name}! 🎉 مرحباً بك في خالتو — وجباتك البيتية المفضلة بين يديك. حمّل التطبيق الآن!</textarea></div>
+                <div class="fld"><label>SMS ترحيب (إنجليزي)</label><textarea id="tpl-wel-sms-en">Welcome {name}! 🎉 Khalto — Your favorite home-cooked meals are just a tap away. Download now!</textarea></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYMENT GATEWAYS ── -->
+    <div class="page" id="p-gateways">
+      <div class="kpi-grid" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ico">💳</div><div class="kpi-badge" id="gw-tap-badge">فحص...</div></div><div class="kpi-val">Tap</div><div class="kpi-lbl">بوابة السعودية والخليج</div></div>
+        <div class="kpi g"><div class="kpi-top"><div class="kpi-ico">💳</div><div class="kpi-badge" id="gw-pm-badge">فحص...</div></div><div class="kpi-val">Paymob</div><div class="kpi-lbl">بوابة مصر</div></div>
+        <div class="kpi b"><div class="kpi-top"><div class="kpi-ico">💰</div><div class="kpi-badge">اليوم</div></div><div class="kpi-val" id="gw-vol">—</div><div class="kpi-lbl">حجم المدفوعات</div></div>
+        <div class="kpi a"><div class="kpi-top"><div class="kpi-ico">✅</div><div class="kpi-badge">معدل</div></div><div class="kpi-val" id="gw-success">—</div><div class="kpi-lbl">نجاح المدفوعات</div></div>
+      </div>
+
+      <div class="g2">
+        <!-- Tap Payments -->
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">
+              <span style="width:32px;height:32px;background:#1a1a2e;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900">Tap</span>
+              Tap Payments
+            </div>
+            <button class="card-act" onclick="testTapGateway()">🧪 اختبار</button>
+          </div>
+          <div class="card-body">
+            <div id="tap-status"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+            <div style="margin-top:14px">
+              <div class="stat-row"><span>البيئة</span><span class="chip" id="tap-env">—</span></div>
+              <div class="stat-row"><span>الدول المدعومة</span><div style="display:flex;gap:4px"><span class="chip c-green">🇸🇦 SA</span><span class="chip c-green">🇰🇼 KW</span><span class="chip c-green">🇦🇪 AE</span></div></div>
+              <div class="stat-row"><span>طرق الدفع</span><div style="font-size:11px">KNET, VISA, Mastercard, مدى, Apple Pay</div></div>
+              <div class="stat-row"><span>رسوم المعالجة</span><div class="stat-val">2.75%</div></div>
+            </div>
+            <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">آخر المعاملات</div>
+              <div id="tap-transactions"><div class="loader"><div class="spin"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paymob -->
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">
+              <span style="width:32px;height:32px;background:#6c5ce7;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:900">Pay</span>
+              Paymob
+            </div>
+            <button class="card-act" onclick="testPaymobGateway()">🧪 اختبار</button>
+          </div>
+          <div class="card-body">
+            <div id="paymob-status"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+            <div style="margin-top:14px">
+              <div class="stat-row"><span>البيئة</span><span class="chip" id="paymob-env">—</span></div>
+              <div class="stat-row"><span>الدول المدعومة</span><div style="display:flex;gap:4px"><span class="chip c-green">🇪🇬 EG</span></div></div>
+              <div class="stat-row"><span>طرق الدفع</span><div style="font-size:11px">Visa, Mastercard, Fawry, Wallet</div></div>
+              <div class="stat-row"><span>رسوم المعالجة</span><div class="stat-val">2.5%</div></div>
+            </div>
+            <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">آخر المعاملات</div>
+              <div id="paymob-transactions"><div class="loader"><div class="spin"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Settings per Country -->
+      <div class="card">
+        <div class="card-hd"><div class="card-title">⚙️ إعدادات الدفع لكل دولة</div></div>
+        <div class="card-body">
+          <table class="tbl">
+            <thead><tr><th>الدولة</th><th>البوابة الأساسية</th><th>الدفع النقدي</th><th>المحفظة الرقمية</th><th>Apple Pay</th><th>الحالة</th></tr></thead>
+            <tbody id="gw-countries-tbl">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Webhook URLs -->
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🔗 Webhook URLs</div></div>
+        <div class="card-body">
+          <div class="alert alert-info">أضف هذه الـ URLs في لوحة تحكم بوابات الدفع</div>
+          <div class="stat-row">
+            <span>Tap Webhook</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <code id="tap-webhook-url" style="font-size:11px;background:var(--bg);padding:4px 8px;border-radius:6px;direction:ltr">—</code>
+              <button class="btn btn-outline btn-sm" onclick="copyWebhook('tap')">نسخ</button>
+            </div>
+          </div>
+          <div class="stat-row">
+            <span>Paymob Webhook</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <code id="paymob-webhook-url" style="font-size:11px;background:var(--bg);padding:4px 8px;border-radius:6px;direction:ltr">—</code>
+              <button class="btn btn-outline btn-sm" onclick="copyWebhook('paymob')">نسخ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="p-settings">
+      <div class="g2">
+        <!-- API Health -->
+        <div class="card">
+          <div class="card-hd"><div class="card-title">⚡ حالة النظام</div><button class="card-act" onclick="loadSettings()">تحديث</button></div>
+          <div class="card-body">
+            <div id="system-health"><div class="loader"><div class="spin"></div>جاري الفحص...</div></div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+          <div class="card-hd"><div class="card-title">🔗 روابط سريعة</div></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <a href="https://cloud.digitalocean.com" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>🌊</span><span>DigitalOcean Dashboard</span>
+              </a>
+              <a href="https://dashboard.twilio.com" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>📱</span><span>Twilio Console</span>
+              </a>
+              <a href="https://app.sendgrid.com" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>📧</span><span>SendGrid Dashboard</span>
+              </a>
+              <a href="https://business.tap.company" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>💳</span><span>Tap Payments Dashboard</span>
+              </a>
+              <a href="https://accept.paymob.com" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>💳</span><span>Paymob Dashboard</span>
+              </a>
+              <a href="https://console.firebase.google.com" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>🔥</span><span>Firebase Console</span>
+              </a>
+              <a href="https://github.com/Elbry-1907/khalto-api" target="_blank" class="btn btn-outline" style="justify-content:flex-start;gap:10px">
+                <span>💻</span><span>GitHub Repository</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environment Variables Guide -->
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🔒 المتغيرات المطلوبة في DigitalOcean</div></div>
+        <div class="card-body">
+          <table class="tbl">
+            <thead><tr><th>المتغير</th><th>الوصف</th><th>مطلوب لـ</th><th>الحالة</th></tr></thead>
+            <tbody id="env-vars-table">
+              <tr><td><code>TWILIO_ACCOUNT_SID</code></td><td>Twilio Account SID</td><td>SMS + WhatsApp</td><td><span class="chip c-gold" id="env-twilio">غير معروف</span></td></tr>
+              <tr><td><code>TWILIO_AUTH_TOKEN</code></td><td>Twilio Auth Token</td><td>SMS + WhatsApp</td><td><span class="chip c-gold">مطلوب</span></td></tr>
+              <tr><td><code>TWILIO_PHONE_SA</code></td><td>رقم Twilio للسعودية</td><td>SMS السعودية</td><td><span class="chip c-gold" id="env-twilio-sa">غير معروف</span></td></tr>
+              <tr><td><code>TWILIO_PHONE_EG</code></td><td>رقم Twilio لمصر</td><td>SMS مصر</td><td><span class="chip c-gold" id="env-twilio-eg">غير معروف</span></td></tr>
+              <tr><td><code>SENDGRID_API_KEY</code></td><td>SendGrid API Key (يبدأ بـ SG.)</td><td>Email</td><td><span class="chip c-gold" id="env-sendgrid">غير معروف</span></td></tr>
+              <tr><td><code>TAP_SECRET_KEY</code></td><td>Tap Secret Key (sk_live_...)</td><td>مدفوعات SA</td><td><span class="chip c-gold" id="env-tap">غير معروف</span></td></tr>
+              <tr><td><code>PAYMOB_API_KEY</code></td><td>Paymob API Key</td><td>مدفوعات EG</td><td><span class="chip c-gold" id="env-paymob">غير معروف</span></td></tr>
+              <tr><td><code>FIREBASE_PROJECT_ID</code></td><td>Firebase Project ID</td><td>Push Notifications</td><td><span class="chip c-gold" id="env-firebase">غير معروف</span></td></tr>
+              <tr><td><code>GOOGLE_MAPS_API_KEY</code></td><td>Google Maps API Key</td><td>الخرائط والتوصيل</td><td><span class="chip c-gold">مطلوب</span></td></tr>
+            </tbody>
+          </table>
+          <div class="alert alert-warn" style="margin-top:12px">
+            ⚠️ لتغيير أي مفتاح: اذهب لـ DigitalOcean → App → Settings → Environment Variables
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="card" style="border-color:var(--red)">
+        <div class="card-hd" style="background:rgba(231,76,60,.05)"><div class="card-title" style="color:var(--red)">⚠️ منطقة الخطر</div></div>
+        <div class="card-body">
+          <div class="g2">
+            <div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">مسح Cache النظام</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">يمسح Redis cache — لن يؤثر على البيانات</div>
+              <button class="btn btn-outline btn-sm" onclick="clearCache()">🗑️ مسح Cache</button>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">تشغيل Migrations</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px">تشغيل migrations غير المطبّقة</div>
+              <button class="btn btn-outline btn-sm" onclick="runMigrations()">🔄 تشغيل Migrations</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -767,7 +1119,7 @@ function go(page, el) {
 }
 
 function refreshPage() {
-  const loaders = { dashboard:loadDash, orders:loadOrders, kitchens:loadKitchens, couriers:loadCouriers, customers:loadCustomers, settlements:loadSettlements, commission:loadCommission, coupons:loadCoupons, branding:loadBranding, countries:loadCountries };
+  const loaders = { dashboard:loadDash, orders:loadOrders, kitchens:loadKitchens, couriers:loadCouriers, customers:loadCustomers, settlements:loadSettlements, commission:loadCommission, coupons:loadCoupons, branding:loadBranding, countries:loadCountries, communications:()=>checkSMSStatus(), gateways:loadGateways, settings:loadSettings };
   if (loaders[currentPage]) loaders[currentPage]();
 }
 
@@ -1355,6 +1707,283 @@ document.getElementById('global-search').addEventListener('input', function() {
     tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 });
+
+
+// ── COMMUNICATIONS ────────────────────────────────────
+function switchCommTab(tab, el) {
+  ['sms','whatsapp','email','templates'].forEach(t => {
+    document.getElementById('comm-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  if (tab === 'sms') checkSMSStatus();
+  if (tab === 'whatsapp') checkWAStatus();
+  if (tab === 'email') checkEmailStatus();
+}
+
+function switchTplTab(tab, el) {
+  ['otp','order','delivery','settlement','welcome'].forEach(t => {
+    document.getElementById('tpl-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+async function checkSMSStatus() {
+  const res = await api('/notifications/sms/status');
+  const el  = document.getElementById('sms-status');
+  if (res.configured) {
+    el.innerHTML = `<div class="alert alert-success">✅ Twilio متصل ويعمل بشكل صحيح</div>`;
+    document.getElementById('twilio-sa').textContent = res.phone_sa || 'غير محدد';
+    document.getElementById('twilio-eg').textContent = res.phone_eg || 'غير محدد';
+    document.getElementById('sms-today').textContent = res.sent_today || '0';
+    document.getElementById('sms-week').textContent  = res.sent_week  || '0';
+    document.getElementById('sms-otp').textContent   = res.sent_otp   || '0';
+    document.getElementById('sms-rate').textContent  = res.success_rate ? res.success_rate + '%' : '—';
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ Twilio غير متصل — أضف TWILIO_ACCOUNT_SID في Environment Variables</div>`;
+  }
+}
+
+async function checkWAStatus() {
+  const el = document.getElementById('wa-status');
+  el.innerHTML = `<div class="alert alert-warn">⚠️ WhatsApp Business يحتاج إعداد Twilio WhatsApp Sandbox أولاً</div>`;
+}
+
+async function checkEmailStatus() {
+  const res = await api('/notifications/email/status');
+  const el  = document.getElementById('email-status');
+  if (res.configured) {
+    el.innerHTML = `<div class="alert alert-success">✅ SendGrid متصل ويعمل بشكل صحيح</div>`;
+    document.getElementById('smtp-from-display').textContent = res.from_email || '—';
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ SendGrid غير متصل — أضف SENDGRID_API_KEY في Environment Variables</div>`;
+  }
+}
+
+async function testSMS() {
+  const phone = document.getElementById('test-sms-phone').value;
+  const msg   = document.getElementById('test-sms-msg').value;
+  if (!phone) { toast('أدخل رقم الهاتف', 'error'); return; }
+  const res = await api('/notifications/sms/test', {
+    method: 'POST',
+    body: JSON.stringify({ phone, message: msg })
+  });
+  if (res.ok || res.sent) toast('✅ تم إرسال SMS بنجاح!');
+  else toast(res.error || 'فشل الإرسال — تحقق من إعدادات Twilio', 'error');
+}
+
+async function testWhatsApp() {
+  const phone = document.getElementById('test-wa-phone').value;
+  const msg   = document.getElementById('test-wa-msg').value;
+  if (!phone) { toast('أدخل رقم الهاتف', 'error'); return; }
+  const res = await api('/notifications/whatsapp/test', {
+    method: 'POST',
+    body: JSON.stringify({ phone, message: msg })
+  });
+  if (res.ok || res.sent) toast('✅ تم إرسال WhatsApp بنجاح!');
+  else toast(res.error || 'فشل الإرسال', 'error');
+}
+
+async function testEmail() {
+  const to      = document.getElementById('test-email-to').value;
+  const subject = document.getElementById('test-email-subject').value;
+  const body    = document.getElementById('test-email-body').value;
+  if (!to) { toast('أدخل البريد الإلكتروني', 'error'); return; }
+  const res = await api('/notifications/email/test', {
+    method: 'POST',
+    body: JSON.stringify({ to, subject, body })
+  });
+  if (res.ok || res.sent) toast('✅ تم إرسال البريد بنجاح!');
+  else toast(res.error || 'فشل الإرسال — تحقق من إعدادات SendGrid', 'error');
+}
+
+function saveTemplates() {
+  const templates = {
+    otp: {
+      sms_ar: document.getElementById('tpl-otp-sms-ar').value,
+      sms_en: document.getElementById('tpl-otp-sms-en').value,
+    },
+    order: {
+      sms_ar:       document.getElementById('tpl-order-sms-ar').value,
+      sms_en:       document.getElementById('tpl-order-sms-en').value,
+      wa_ar:        document.getElementById('tpl-order-wa-ar').value,
+      email_subject:document.getElementById('tpl-order-email-subject').value,
+    },
+    delivery: {
+      sms_ar: document.getElementById('tpl-del-sms-ar').value,
+      sms_en: document.getElementById('tpl-del-sms-en').value,
+    },
+    settlement: {
+      sms_ar:       document.getElementById('tpl-set-sms-ar').value,
+      email_subject:document.getElementById('tpl-set-email-subject').value,
+    },
+    welcome: {
+      sms_ar: document.getElementById('tpl-wel-sms-ar').value,
+      sms_en: document.getElementById('tpl-wel-sms-en').value,
+    },
+  };
+  localStorage.setItem('khalto_templates', JSON.stringify(templates));
+  toast('✅ تم حفظ القوالب محلياً');
+}
+
+// ── PAYMENT GATEWAYS ──────────────────────────────────
+async function loadGateways() {
+  checkTapStatus();
+  checkPaymobStatus();
+  loadGatewayCountries();
+  setWebhookURLs();
+}
+
+async function checkTapStatus() {
+  const res = await api('/payments/tap/status');
+  const el  = document.getElementById('tap-status');
+  const badge = document.getElementById('gw-tap-badge');
+  if (res.configured) {
+    el.innerHTML = `<div class="alert alert-success">✅ Tap Payments متصل ويعمل</div>`;
+    document.getElementById('tap-env').textContent  = res.live ? 'Live 🟢' : 'Test 🟡';
+    document.getElementById('tap-env').className    = 'chip ' + (res.live ? 'c-green' : 'c-gold');
+    badge.textContent = res.live ? 'Live' : 'Test';
+    badge.className   = 'kpi-badge';
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ Tap غير متصل — أضف TAP_SECRET_KEY في Environment Variables</div>`;
+    badge.textContent = 'غير متصل';
+  }
+  // Load recent transactions
+  const txRes = await api('/payments?gateway=tap&limit=5');
+  const txs   = txRes.payments || [];
+  document.getElementById('tap-transactions').innerHTML = txs.length
+    ? txs.map(t => `<div class="stat-row"><span>${t.order_id?.slice(0,8)||'—'}</span><strong>SAR ${t.amount||0}</strong></div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px;text-align:center">لا توجد معاملات</div>';
+}
+
+async function checkPaymobStatus() {
+  const res   = await api('/payments/paymob/status');
+  const el    = document.getElementById('paymob-status');
+  const badge = document.getElementById('gw-pm-badge');
+  if (res.configured) {
+    el.innerHTML = `<div class="alert alert-success">✅ Paymob متصل ويعمل</div>`;
+    document.getElementById('paymob-env').textContent = res.live ? 'Live 🟢' : 'Test 🟡';
+    document.getElementById('paymob-env').className   = 'chip ' + (res.live ? 'c-green' : 'c-gold');
+    badge.textContent = res.live ? 'Live' : 'Test';
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ Paymob غير متصل — أضف PAYMOB_API_KEY في Environment Variables</div>`;
+    badge.textContent = 'غير متصل';
+  }
+  const txRes = await api('/payments?gateway=paymob&limit=5');
+  const txs   = txRes.payments || [];
+  document.getElementById('paymob-transactions').innerHTML = txs.length
+    ? txs.map(t => `<div class="stat-row"><span>${t.order_id?.slice(0,8)||'—'}</span><strong>EGP ${t.amount||0}</strong></div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px;text-align:center">لا توجد معاملات</div>';
+}
+
+async function testTapGateway() {
+  const res = await api('/payments/tap/test', { method: 'POST', body: '{}' });
+  if (res.ok) toast('✅ Tap يعمل بشكل صحيح!');
+  else toast(res.error || 'فشل الاختبار', 'error');
+}
+
+async function testPaymobGateway() {
+  const res = await api('/payments/paymob/test', { method: 'POST', body: '{}' });
+  if (res.ok) toast('✅ Paymob يعمل بشكل صحيح!');
+  else toast(res.error || 'فشل الاختبار', 'error');
+}
+
+async function loadGatewayCountries() {
+  const res  = await api('/countries?active_only=true');
+  const data = res.countries || [];
+  document.getElementById('gw-countries-tbl').innerHTML = data.length
+    ? data.map(c => `
+      <tr>
+        <td><strong>${c.name_ar}</strong></td>
+        <td><span class="chip c-blue">${c.payment_gateway === 'paymob' ? 'Paymob' : 'Tap'}</span></td>
+        <td><span class="chip c-grey">قريباً</span></td>
+        <td><span class="chip c-green">✅ مفعّل</span></td>
+        <td><span class="chip c-grey">قريباً</span></td>
+        <td>${c.is_active ? '<span class="chip c-green">نشط</span>' : '<span class="chip c-red">موقوف</span>'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">لا توجد دول</td></tr>';
+}
+
+function setWebhookURLs() {
+  const base = API.replace('/api/v1', '');
+  document.getElementById('tap-webhook-url').textContent    = base + '/api/v1/payments/webhook/tap';
+  document.getElementById('paymob-webhook-url').textContent = base + '/api/v1/payments/webhook/paymob';
+}
+
+function copyWebhook(type) {
+  const el  = document.getElementById(type + '-webhook-url');
+  navigator.clipboard.writeText(el.textContent);
+  toast('✅ تم نسخ الـ Webhook URL');
+}
+
+// ── SETTINGS ──────────────────────────────────────────
+async function loadSettings() {
+  const res = await api('/health');
+  const el  = document.getElementById('system-health');
+  if (res.status === 'ok') {
+    el.innerHTML = `
+      <div class="alert alert-success">✅ النظام يعمل بشكل صحيح</div>
+      <div class="stat-row"><span>الإصدار</span><div class="stat-val">${res.version || '2.0.0'}</div></div>
+      <div class="stat-row"><span>البيئة</span><div class="stat-val">${res.env || 'production'}</div></div>
+      <div class="stat-row"><span>قاعدة البيانات</span><div class="stat-val" style="color:var(--green)">✅ متصلة</div></div>
+      <div class="stat-row"><span>آخر تحديث</span><div class="stat-val" style="font-size:11px">${new Date(res.ts).toLocaleString('ar-SA')}</div></div>
+    `;
+    // Check env vars
+    checkEnvVars(res);
+  } else {
+    el.innerHTML = `<div class="alert alert-warn">⚠️ النظام يواجه مشكلة</div>`;
+  }
+}
+
+async function checkEnvVars(healthData) {
+  // Check which services are configured based on health endpoint data
+  const configs = healthData.services || {};
+  if (configs.twilio) {
+    document.getElementById('env-twilio').textContent  = '✅ مفعّل';
+    document.getElementById('env-twilio').className    = 'chip c-green';
+    document.getElementById('env-twilio-sa').textContent = configs.twilio_sa ? '✅' : '⚠️';
+    document.getElementById('env-twilio-eg').textContent = configs.twilio_eg ? '✅' : '⚠️';
+  }
+  if (configs.sendgrid) {
+    document.getElementById('env-sendgrid').textContent = '✅ مفعّل';
+    document.getElementById('env-sendgrid').className   = 'chip c-green';
+  }
+  if (configs.tap) {
+    document.getElementById('env-tap').textContent = '✅ مفعّل';
+    document.getElementById('env-tap').className   = 'chip c-green';
+  }
+  if (configs.paymob) {
+    document.getElementById('env-paymob').textContent = '✅ مفعّل';
+    document.getElementById('env-paymob').className   = 'chip c-green';
+  }
+  if (configs.firebase) {
+    document.getElementById('env-firebase').textContent = '✅ مفعّل';
+    document.getElementById('env-firebase').className   = 'chip c-green';
+  }
+}
+
+async function clearCache() {
+  if (!confirm('مسح Redis cache؟')) return;
+  const res = await api('/admin/cache/clear', { method: 'POST', body: '{}' });
+  toast(res.ok ? '✅ تم مسح Cache' : 'فشل المسح');
+}
+
+async function runMigrations() {
+  if (!confirm('تشغيل Migrations؟')) return;
+  const res = await api('/admin/migrate', { method: 'POST', body: '{}' });
+  toast(res.ok ? '✅ تم تشغيل Migrations' : 'فشل التشغيل');
+}
+
+// Update pageTitles and loaders
+const extraTitles = {
+  communications: 'SMS / WhatsApp / Email',
+  gateways: 'بوابات الدفع',
+  settings: 'إعدادات النظام'
+};
+Object.assign(pageTitles, extraTitles);
+
+const origGo = go;
 
 // Auto-refresh every 60s
 setInterval(() => { if(currentPage==='dashboard') loadDash(); }, 60000);

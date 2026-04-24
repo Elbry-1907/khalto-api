@@ -37,6 +37,7 @@ const routeFiles = {
   notifications: './routes/notifications',
   support:       './routes/support',
   admin:         './routes/admin',
+  providers:     './routes/providers',
   countries:     './routes/countries',
   uploads:       './routes/uploads',
   ads:           './routes/ads',

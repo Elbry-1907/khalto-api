@@ -39,6 +39,7 @@ const routeFiles = {
   admin:         './routes/admin',
   'admin/kitchens': './routes/admin-kitchens',
   'admin/couriers': './routes/admin-couriers',
+  'admin/users-v2': './routes/admin-users',
   providers:     './routes/providers',
   countries:     './routes/countries',
   uploads:       './routes/uploads',

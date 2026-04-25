@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    Page: Dashboard Home
    ═══════════════════════════════════════════════════════════ */
 
@@ -74,8 +74,8 @@ Router.register('dashboard', {
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
             <button class="btn btn-secondary" data-quick="orders">📋 مراجعة الطلبات</button>
-            <button class="btn btn-secondary" data-quick="kitchens">🍳 إدارة المطابخ</button>
-            <button class="btn btn-secondary" data-quick="couriers">🛵 إدارة المندوبين</button>
+            <button class="btn btn-secondary" data-quick="admin-kitchens">🍳 إدارة المطابخ</button>
+            <button class="btn btn-secondary" data-quick="admin-couriers">🛵 إدارة المندوبين</button>
             <button class="btn btn-secondary" data-quick="settlements">💰 التسويات</button>
             <button class="btn btn-secondary" data-quick="coupons">🎁 كوبون جديد</button>
             <button class="btn btn-secondary" data-quick="notifications">🔔 إرسال إشعار</button>

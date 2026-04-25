@@ -162,9 +162,12 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
       .where('k.id', req.params.id)
       .select(
         'k.*',
+        'u.id as user_id',
         'u.full_name as owner_name',
         'u.phone as owner_phone',
         'u.email as owner_email',
+        'u.blocked_at',
+        'u.blocked_reason',
         'c.name_ar as city_name',
         'c.id as city_id',
         'co.name_ar as country_name',

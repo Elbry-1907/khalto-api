@@ -275,6 +275,17 @@ adminCouriers: {
     setPercentage(id, pct)    { return API.put(`/admin/couriers/${id}/percentage`, { delivery_percentage: pct }); },
     setAvailability(id, avail){ return API.put(`/admin/couriers/${id}/availability`, { availability: avail }); },
   },
+  adminUsers: {
+    list(params)            { return API.get('/admin/users-v2', params); },
+    get(id)                 { return API.get(`/admin/users-v2/${id}`); },
+    actionLog(id)           { return API.get(`/admin/users-v2/${id}/action-log`); },
+    create(body)            { return API.post('/admin/users-v2/create', body); },
+    update(id, body)        { return API.put(`/admin/users-v2/${id}`, body); },
+    resetPassword(id)       { return API.post(`/admin/users-v2/${id}/reset-password`); },
+    block(id, reason)       { return API.post(`/admin/users-v2/${id}/block`, { reason }); },
+    unblock(id)             { return API.post(`/admin/users-v2/${id}/unblock`); },
+    delete(id)              { return API.delete(`/admin/users-v2/${id}`); },
+  },
 };
 
 window.API = API;

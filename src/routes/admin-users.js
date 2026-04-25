@@ -49,7 +49,8 @@ function userQuery() {
       'co.name_ar as country_name',
       'co.code as country_iso',
       'co.currency_code',
-      'co.currency_symbol'
+      'co.currency_symbol',
+      'co.currency_symbol_en'
     );
 }
 

@@ -9,12 +9,18 @@ router.get('/', authenticate, isFinance, async (req, res, next) => {
     const { status, recipient_type, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = db('settlements')
-      .orderBy('created_at', 'desc')
+    let query = db('settlements as s')
+      .leftJoin('countries as co', 'co.currency_code', 's.currency_code')
+      .select(
+        's.*',
+        'co.currency_symbol',
+        'co.currency_symbol_en'
+      )
+      .orderBy('s.created_at', 'desc')
       .limit(limit).offset(offset);
 
-    if (status)         query = query.where({ status });
-    if (recipient_type) query = query.where({ recipient_type });
+    if (status)         query = query.where('s.status', status);
+    if (recipient_type) query = query.where('s.recipient_type', recipient_type);
 
     const settlements = await query;
     res.json({ settlements, page: +page, limit: +limit });
@@ -38,13 +44,19 @@ router.get('/me', authenticate, requireRole('chef', 'courier'), async (req, res,
       recipientId = courier.id;
     }
 
-    let query = db('settlements')
-      .where({ recipient_id: recipientId })
-      .orderBy('period_start', 'desc')
+    let query = db('settlements as s')
+      .leftJoin('countries as co', 'co.currency_code', 's.currency_code')
+      .where('s.recipient_id', recipientId)
+      .select(
+        's.*',
+        'co.currency_symbol',
+        'co.currency_symbol_en'
+      )
+      .orderBy('s.period_start', 'desc')
       .limit(limit).offset(offset);
 
-    if (period === 'month') query = query.whereRaw("period_start >= NOW() - INTERVAL '30 days'");
-    if (period === 'week')  query = query.whereRaw("period_start >= NOW() - INTERVAL '7 days'");
+    if (period === 'month') query = query.whereRaw("s.period_start >= NOW() - INTERVAL '30 days'");
+    if (period === 'week')  query = query.whereRaw("s.period_start >= NOW() - INTERVAL '7 days'");
 
     const settlements = await query;
 
@@ -65,7 +77,15 @@ router.get('/me', authenticate, requireRole('chef', 'courier'), async (req, res,
 // ── GET /settlements/:id ──
 router.get('/:id', authenticate, isFinance, async (req, res, next) => {
   try {
-    const settlement = await db('settlements').where({ id: req.params.id }).first();
+    const settlement = await db('settlements as s')
+      .leftJoin('countries as co', 'co.currency_code', 's.currency_code')
+      .where('s.id', req.params.id)
+      .select(
+        's.*',
+        'co.currency_symbol',
+        'co.currency_symbol_en'
+      )
+      .first();
     if (!settlement) return res.status(404).json({ error: 'Not found' });
     const items = await db('orders')
       .where({ settlement_id: settlement.id })

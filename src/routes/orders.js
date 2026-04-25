@@ -146,8 +146,15 @@ router.get('/', authenticate, async (req, res, next) => {
     const offset = (page - 1) * limit;
 
     let query = db('orders as o')
-      .select('o.*', 'k.name_en as kitchen_name', 'k.logo_url as kitchen_logo')
+      .leftJoin('countries as co', 'co.currency_code', 'o.currency_code')
       .join('kitchens as k', 'o.kitchen_id', 'k.id')
+      .select(
+        'o.*',
+        'k.name_en as kitchen_name',
+        'k.logo_url as kitchen_logo',
+        'co.currency_symbol',
+        'co.currency_symbol_en'
+      )
       .orderBy('o.created_at', 'desc')
       .limit(limit).offset(offset);
 
@@ -169,11 +176,19 @@ router.get('/', authenticate, async (req, res, next) => {
 router.get('/:id', validateUUID(), authenticate, async (req, res, next) => {
   try {
     const order = await db('orders as o')
-      .select('o.*',
-        'k.name_en as kitchen_name', 'k.logo_url as kitchen_logo', 'k.phone as kitchen_phone',
-        'u.full_name as customer_name', 'u.phone as customer_phone')
+      .leftJoin('countries as co', 'co.currency_code', 'o.currency_code')
       .join('kitchens as k', 'o.kitchen_id', 'k.id')
       .join('users as u', 'o.customer_id', 'u.id')
+      .select(
+        'o.*',
+        'k.name_en as kitchen_name',
+        'k.logo_url as kitchen_logo',
+        'k.phone as kitchen_phone',
+        'u.full_name as customer_name',
+        'u.phone as customer_phone',
+        'co.currency_symbol',
+        'co.currency_symbol_en'
+      )
       .where('o.id', req.params.id)
       .first();
 

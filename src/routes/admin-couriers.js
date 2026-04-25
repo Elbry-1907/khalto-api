@@ -71,6 +71,9 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
         'co.id as country_id',
         'co.name_ar as country_name',
         'co.code as country_code',
+        'co.currency_code',
+        'co.currency_symbol',
+        'co.currency_symbol_en',
         'ab.full_name as approved_by_name'
       );
 
@@ -210,6 +213,9 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
         'ci.id as city_id',
         'co.name_ar as country_name',
         'co.code as country_code',
+        'co.currency_code',
+        'co.currency_symbol',
+        'co.currency_symbol_en',
         'ab.full_name as approved_by_name',
         'rb.full_name as rejected_by_name',
         'sb.full_name as suspended_by_name'

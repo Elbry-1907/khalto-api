@@ -68,7 +68,10 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
         'c.name_ar as city_name',
         'co.id as country_id',
         'co.name_ar as country_name',
-        'co.code as country_code',
+      'co.code as country_code',
+        'co.currency_code',
+        'co.currency_symbol',
+        'co.currency_symbol_en',
         'ab.full_name as approved_by_name'
       );
 

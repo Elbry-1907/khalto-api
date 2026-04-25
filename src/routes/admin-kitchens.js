@@ -55,7 +55,7 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
     let q = db('kitchens as k')
       .leftJoin('users as u', 'u.id', 'k.user_id')
       .leftJoin('cities as c', 'c.id', 'k.city_id')
-      .leftJoin('countries as co', 'co.id', db.raw('COALESCE(k.country_id, c.country_id)'))
+      .leftJoin('countries as co', 'co.id', 'c.country_id')
       .leftJoin('users as ab', 'ab.id', 'k.approved_by')
       .select(
         'k.*',
@@ -161,7 +161,7 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
     const kitchen = await db('kitchens as k')
       .leftJoin('users as u', 'u.id', 'k.user_id')
       .leftJoin('cities as c', 'c.id', 'k.city_id')
-      .leftJoin('countries as co', 'co.id', db.raw('COALESCE(k.country_id, c.country_id)'))
+      .leftJoin('countries as co', 'co.id', 'c.country_id')
       .leftJoin('users as ab', 'ab.id', 'k.approved_by')
       .leftJoin('users as rb', 'rb.id', 'k.rejected_by')
       .leftJoin('users as sb', 'sb.id', 'k.suspended_by')

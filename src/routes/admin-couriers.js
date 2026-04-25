@@ -58,7 +58,7 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
     let q = db('couriers as c')
       .leftJoin('users as u', 'u.id', 'c.user_id')
       .leftJoin('cities as ci', 'ci.id', 'c.city_id')
-      .leftJoin('countries as co', 'co.id', db.raw('COALESCE(c.country_id, ci.country_id)'))
+      .leftJoin('countries as co', 'co.id', 'ci.country_id')
       .leftJoin('users as ab', 'ab.id', 'c.approved_by')
       .select(
         'c.*',
@@ -196,7 +196,7 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
     const courier = await db('couriers as c')
       .leftJoin('users as u', 'u.id', 'c.user_id')
       .leftJoin('cities as ci', 'ci.id', 'c.city_id')
-      .leftJoin('countries as co', 'co.id', db.raw('COALESCE(c.country_id, ci.country_id)'))
+      .leftJoin('countries as co', 'co.id', 'ci.country_id')
       .leftJoin('users as ab', 'ab.id', 'c.approved_by')
       .leftJoin('users as rb', 'rb.id', 'c.rejected_by')
       .leftJoin('users as sb', 'sb.id', 'c.suspended_by')

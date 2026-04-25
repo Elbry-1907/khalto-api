@@ -23,6 +23,7 @@ const migrations = [
   path.join(__dirname, 'migrations/015_fix_orders_audit.sql'),
   path.join(__dirname, 'migrations/016_force_fix.sql'),
   path.join(__dirname, 'migrations/017_admin_kitchens.sql'),
+  path.join(__dirname, 'migrations/018_admin_couriers.sql'),
 ];
 
 async function migrate() {

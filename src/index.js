@@ -38,6 +38,7 @@ const routeFiles = {
   support:       './routes/support',
   admin:         './routes/admin',
   'admin/kitchens': './routes/admin-kitchens',
+  'admin/couriers': './routes/admin-couriers',
   providers:     './routes/providers',
   countries:     './routes/countries',
   uploads:       './routes/uploads',

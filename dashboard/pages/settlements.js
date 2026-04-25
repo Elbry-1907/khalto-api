@@ -56,8 +56,8 @@ Router.register('settlements', {
           </td>
           <td class="text-sm">${Utils.date(s.period_start)} ← ${Utils.date(s.period_end)}</td>
           <td><strong>${Utils.number(s.order_count)}</strong></td>
-          <td>${Utils.currency(s.gross_amount, s.currency_code)}</td>
-          <td><strong class="text-success">${Utils.currency(s.net_amount, s.currency_code)}</strong></td>
+          <td>${Utils.currency(s.gross_amount, s)}</td>
+          <td><strong class="text-success">${Utils.currency(s.net_amount, s)}</strong></td>
           <td>${Utils.statusBadge(s.status)}</td>
           <td class="row-actions">
             ${s.status === 'pending' ? `<button class="btn btn-sm btn-success" data-approve="${s.id}">✅ اعتماد</button>` : ''}

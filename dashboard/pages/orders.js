@@ -55,7 +55,7 @@ Router.register('orders', {
           <td><strong>${o.order_number || o.id.slice(0, 8)}</strong></td>
           <td>${Utils.escape(o.customer_name || '—')}<br><small class="text-muted">${Utils.escape(o.customer_phone || '')}</small></td>
           <td>${Utils.escape(o.kitchen_name || '—')}</td>
-          <td><strong>${Utils.currency(o.total_amount, o.currency_code)}</strong></td>
+          <td><strong>${Utils.currency(o.total_amount, o)}</strong></td>
           <td>${Utils.statusBadge(o.status)}</td>
           <td class="text-sm text-muted">${Utils.timeAgo(o.created_at)}</td>
           <td class="row-actions">
@@ -104,8 +104,8 @@ Router.register('orders', {
         <tr>
           <td>${Utils.escape(i.name_snapshot || '—')}</td>
           <td class="text-center">${i.quantity}×</td>
-          <td>${Utils.currency(i.price_snapshot, order.currency_code)}</td>
-          <td><strong>${Utils.currency(i.subtotal, order.currency_code)}</strong></td>
+          <td>${Utils.currency(i.price_snapshot, order)}</td>
+          <td><strong>${Utils.currency(i.subtotal, order)}</strong></td>
         </tr>
       `).join('') || `<tr><td colspan="4" class="text-center text-muted">لا توجد عناصر</td></tr>`;
 
@@ -161,11 +161,11 @@ Router.register('orders', {
         </table>
 
         <div style="background:var(--bg);padding:12px;border-radius:var(--radius);margin-top:16px;">
-          <div class="flex justify-between mb-2"><span class="text-muted">المجموع الفرعي</span><span>${Utils.currency(order.subtotal, order.currency_code)}</span></div>
-          <div class="flex justify-between mb-2"><span class="text-muted">رسوم التوصيل</span><span>${Utils.currency(order.delivery_fee, order.currency_code)}</span></div>
-          ${order.discount_amount > 0 ? `<div class="flex justify-between mb-2 text-success"><span>الخصم</span><span>-${Utils.currency(order.discount_amount, order.currency_code)}</span></div>` : ''}
-          <div class="flex justify-between mb-2"><span class="text-muted">الضريبة</span><span>${Utils.currency(order.tax_amount, order.currency_code)}</span></div>
-          <div class="flex justify-between" style="padding-top:8px;border-top:1px solid var(--border);"><strong>الإجمالي</strong><strong>${Utils.currency(order.total_amount, order.currency_code)}</strong></div>
+          <div class="flex justify-between mb-2"><span class="text-muted">المجموع الفرعي</span><span>${Utils.currency(order.subtotal, order)}</span></div>
+          <div class="flex justify-between mb-2"><span class="text-muted">رسوم التوصيل</span><span>${Utils.currency(order.delivery_fee, order)}</span></div>
+          ${order.discount_amount > 0 ? `<div class="flex justify-between mb-2 text-success"><span>الخصم</span><span>-${Utils.currency(order.discount_amount, order)}</span></div>` : ''}
+          <div class="flex justify-between mb-2"><span class="text-muted">الضريبة</span><span>${Utils.currency(order.tax_amount, order)}</span></div>
+          <div class="flex justify-between" style="padding-top:8px;border-top:1px solid var(--border);"><strong>الإجمالي</strong><strong>${Utils.currency(order.total_amount, order)}</strong></div>
         </div>
 
         ${validTransitions.length > 0 ? `

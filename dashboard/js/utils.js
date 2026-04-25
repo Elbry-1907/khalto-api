@@ -6,9 +6,29 @@ const Utils = {
 
   // ── Formatting ────────────────────────────────────────
 
-  currency(amount, code = 'SAR') {
+  // Currency symbol lookup — covers all supported markets
+  CURRENCY_SYMBOLS: {
+    SAR: 'ر.س',  EGP: 'ج.م',  AED: 'د.إ',
+    KWD: 'د.ك',  BHD: 'د.ب',  OMR: 'ر.ع',
+    QAR: 'ر.ق',  JOD: 'د.أ',  USD: '$',
+  },
+
+  /**
+   * Format a money amount with the proper currency symbol.
+   * @param {number|string} amount   - The numeric amount
+   * @param {string|object} codeOrRow - Currency code OR a row with currency_symbol
+   */
+  currency(amount, codeOrRow = 'SAR') {
     const num = parseFloat(amount) || 0;
-    const symbol = { SAR: 'ر.س', EGP: 'ج.م', USD: '$' }[code] || code;
+    let symbol;
+    if (codeOrRow && typeof codeOrRow === 'object') {
+      symbol = codeOrRow.currency_symbol
+            || this.CURRENCY_SYMBOLS[codeOrRow.currency_code]
+            || codeOrRow.currency_code
+            || this.CURRENCY_SYMBOLS.SAR;
+    } else {
+      symbol = this.CURRENCY_SYMBOLS[codeOrRow] || codeOrRow || this.CURRENCY_SYMBOLS.SAR;
+    }
     return `${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${symbol}`;
   },
 

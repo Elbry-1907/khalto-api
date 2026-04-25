@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Khalto — Admin Kitchens Management
  * Full CRUD + lifecycle management for kitchens (admin only)
  *
@@ -59,9 +59,12 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
       .leftJoin('users as ab', 'ab.id', 'k.approved_by')
       .select(
         'k.*',
+        'u.id as user_id',
         'u.full_name as owner_name',
         'u.phone as owner_phone',
         'u.email as owner_email',
+        'u.blocked_at',
+        'u.blocked_reason',
         'c.name_ar as city_name',
         'co.id as country_id',
         'co.name_ar as country_name',

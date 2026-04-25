@@ -251,7 +251,7 @@ Router.register('admin-couriers', {
           <div>${Utils.escape(c.city_name || '—')}</div>
           <div class="text-sm text-muted">${Utils.escape(c.country_code || '')}</div>
         </td>
-        <td><span class="badge status-${c.status}">${statusLabel}</span></td>
+        <td><span class="badge status-${c.status}">${statusLabel}</span>${c.blocked_at ? '<br><span class="badge status-blocked" style="margin-top:3px;">🚫 محظور</span>' : ''}</td>
         <td><span class="badge avail-${c.availability}">${availLabel}</span></td>
         <td>
           <div style="font-weight:600;">${c.total_deliveries || 0}</div>
@@ -1027,6 +1027,7 @@ Router.register('admin-couriers', {
       .badge.status-active         { background: #D1FAE5; color: #065F46; }
       .badge.status-suspended      { background: #FED7D7; color: #9B2C2C; }
       .badge.status-rejected       { background: #FECACA; color: #991B1B; }
+      .badge.status-blocked        { background: #1F2937; color: white; }
 
       .badge.avail-online     { background: #D1FAE5; color: #065F46; }
       .badge.avail-offline    { background: #E5E7EB; color: #4B5563; }

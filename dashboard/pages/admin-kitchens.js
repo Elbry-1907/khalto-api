@@ -231,7 +231,7 @@ Router.register('admin-kitchens', {
           <div>${Utils.escape(k.city_name || '—')}</div>
           <div class="text-sm text-muted">${Utils.escape(k.country_code || '')}</div>
         </td>
-        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+        <td><span class="badge ${statusClass}">${statusLabel}</span>${k.blocked_at ? '<br><span class="badge status-blocked" style="margin-top:3px;">🚫 محظور</span>' : ''}</td>
         <td>
           <div title="${rating}">${ratingStars}</div>
           <div class="text-sm text-muted">${k.rating_count || 0} تقييم</div>
@@ -1009,6 +1009,7 @@ Router.register('admin-kitchens', {
       .badge.status-paused         { background: #E0E7FF; color: #3730A3; }
       .badge.status-suspended      { background: #FED7D7; color: #9B2C2C; }
       .badge.status-rejected       { background: #FECACA; color: #991B1B; }
+      .badge.status-blocked        { background: #1F2937; color: white; }
 
       .badge.order-pending     { background: #FEF3C7; color: #92400E; }
       .badge.order-accepted    { background: #DBEAFE; color: #1E40AF; }

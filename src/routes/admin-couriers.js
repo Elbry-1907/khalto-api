@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Khalto — Admin Couriers Management
  * Full CRUD + lifecycle management for couriers (admin only)
  *
@@ -65,6 +65,8 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
         'u.full_name as user_name',
         'u.phone as user_phone',
         'u.email as user_email',
+        'u.blocked_at',
+        'u.blocked_reason',
         'ci.name_ar as city_name',
         'co.id as country_id',
         'co.name_ar as country_name',

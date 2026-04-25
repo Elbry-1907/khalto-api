@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    Khalto Dashboard — API Client
    ═══════════════════════════════════════════════════════════ */
 
@@ -274,6 +274,50 @@ adminCouriers: {
     unsuspend(id)             { return API.post(`/admin/couriers/${id}/unsuspend`); },
     setPercentage(id, pct)    { return API.put(`/admin/couriers/${id}/percentage`, { delivery_percentage: pct }); },
     setAvailability(id, avail){ return API.put(`/admin/couriers/${id}/availability`, { availability: avail }); },
+  },
+
+  adminDocuments: {
+    types(entityType)              { return API.get('/admin/documents/types', { entity_type: entityType }); },
+    listForCourier(courierId)      { return API.get('/admin/documents/courier/' + courierId); },
+    listForKitchen(kitchenId)      { return API.get('/admin/documents/kitchen/' + kitchenId); },
+    checkCourier(courierId)        { return API.get('/admin/documents/courier/' + courierId + '/check'); },
+    checkKitchen(kitchenId)        { return API.get('/admin/documents/kitchen/' + kitchenId + '/check'); },
+
+    async uploadCourier(courierId, file, docType, expiresAt) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('doc_type', docType);
+      if (expiresAt) fd.append('expires_at', expiresAt);
+      const r = await fetch('/api/v1/admin/documents/courier/' + courierId + '/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('khalto_token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      return data;
+    },
+    async uploadKitchen(kitchenId, file, docType, expiresAt) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('doc_type', docType);
+      if (expiresAt) fd.append('expires_at', expiresAt);
+      const r = await fetch('/api/v1/admin/documents/kitchen/' + kitchenId + '/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('khalto_token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      return data;
+    },
+
+    approveCourierDoc(docId)       { return API.post('/admin/documents/courier/doc/' + docId + '/approve'); },
+    approveKitchenDoc(docId)       { return API.post('/admin/documents/kitchen/doc/' + docId + '/approve'); },
+    rejectCourierDoc(docId, reason){ return API.post('/admin/documents/courier/doc/' + docId + '/reject', { reason }); },
+    rejectKitchenDoc(docId, reason){ return API.post('/admin/documents/kitchen/doc/' + docId + '/reject', { reason }); },
+    deleteCourierDoc(docId)        { return API.delete('/admin/documents/courier/doc/' + docId); },
+    deleteKitchenDoc(docId)        { return API.delete('/admin/documents/kitchen/doc/' + docId); },
   },
   adminUsers: {
     list(params)            { return API.get('/admin/users-v2', params); },

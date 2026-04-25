@@ -344,6 +344,7 @@ Router.register('admin-kitchens', {
           <button class="ak-detail-tab ${this.state.detailTab === 'info' ? 'active' : ''}" data-detail-tab="info">📋 المعلومات</button>
           <button class="ak-detail-tab ${this.state.detailTab === 'stats' ? 'active' : ''}" data-detail-tab="stats">📊 الإحصائيات</button>
           <button class="ak-detail-tab ${this.state.detailTab === 'orders' ? 'active' : ''}" data-detail-tab="orders">📋 الطلبات</button>
+          <button class="ak-detail-tab ${this.state.detailTab === 'documents' ? 'active' : ''}" data-detail-tab="documents">📷 المستندات</button>
           <button class="ak-detail-tab ${this.state.detailTab === 'log' ? 'active' : ''}" data-detail-tab="log">📜 السجل</button>
         </div>
         <div id="ak-detail-content">${this.renderDetailContent()}</div>
@@ -383,10 +384,11 @@ Router.register('admin-kitchens', {
   },
 
   renderDetailContent() {
-    if (this.state.detailTab === 'info')   return this.renderInfoTab();
-    if (this.state.detailTab === 'stats')  return this.renderStatsTab();
-    if (this.state.detailTab === 'orders') return this.renderOrdersTab();
-    if (this.state.detailTab === 'log')    return this.renderLogTab();
+    if (this.state.detailTab === 'info')      return this.renderInfoTab();
+    if (this.state.detailTab === 'stats')     return this.renderStatsTab();
+    if (this.state.detailTab === 'orders')    return this.renderOrdersTab();
+    if (this.state.detailTab === 'documents') return this.renderDocumentsTab();
+    if (this.state.detailTab === 'log')       return this.renderLogTab();
     return '';
   },
 
@@ -537,6 +539,38 @@ Router.register('admin-kitchens', {
     }
   },
 
+  renderDocumentsTab() {
+    return `<div id="ak-documents-loading">${Utils.loadingHTML()}</div>`;
+  },
+
+  async loadDetailDocuments() {
+    try {
+      const { documents } = await API.adminKitchens.documents(this.state.selectedKitchen.id);
+      const wrap = document.getElementById('ak-documents-loading');
+      if (!wrap) return;
+      if (!documents || documents.length === 0) {
+        wrap.innerHTML = Utils.emptyHTML('لا توجد مستندات', '', '📷');
+        return;
+      }
+      wrap.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-top:12px;">
+          ${documents.map(d => `
+            <div style="border:1px solid var(--border); border-radius:6px; overflow:hidden; cursor:pointer;" onclick="window.open('${Utils.escape(d.file_url || '')}', '_blank')">
+              <img src="${Utils.escape(d.file_url || '')}" style="width:100%; height:120px; object-fit:cover; background:#f0f0f0;" alt="${Utils.escape(d.document_type || '')}">
+              <div style="padding:8px; font-size:12px; text-align:center;">
+                <div class="text-sm">${Utils.escape(d.document_type || 'مستند')}</div>
+                <div class="text-xs text-muted">${Utils.timeAgo(d.uploaded_at)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } catch (err) {
+      const wrap = document.getElementById('ak-documents-loading');
+      if (wrap) wrap.innerHTML = Utils.errorHTML(err.message);
+    }
+  },
+
   renderLogTab() {
     return `<div id="ak-log-loading">${Utils.loadingHTML()}</div>`;
   },
@@ -598,9 +632,10 @@ Router.register('admin-kitchens', {
         document.querySelectorAll('[data-detail-tab]').forEach(b => b.classList.toggle('active', b.dataset.detailTab === this.state.detailTab));
         const content = document.getElementById('ak-detail-content');
         if (content) content.innerHTML = this.renderDetailContent();
-        if (this.state.detailTab === 'stats')  this.loadDetailStats();
-        if (this.state.detailTab === 'orders') this.loadDetailOrders();
-        if (this.state.detailTab === 'log')    this.loadDetailLog();
+        if (this.state.detailTab === 'stats')     this.loadDetailStats();
+        if (this.state.detailTab === 'orders')   this.loadDetailOrders();
+        if (this.state.detailTab === 'documents') this.loadDetailDocuments();
+        if (this.state.detailTab === 'log')      this.loadDetailLog();
       };
     });
 

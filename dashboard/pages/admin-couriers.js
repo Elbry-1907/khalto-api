@@ -367,6 +367,7 @@ Router.register('admin-couriers', {
           <button class="ac-detail-tab ${this.state.detailTab === 'info' ? 'active' : ''}" data-detail-tab="info">📋 المعلومات</button>
           <button class="ac-detail-tab ${this.state.detailTab === 'earnings' ? 'active' : ''}" data-detail-tab="earnings">💰 الأرباح</button>
           <button class="ac-detail-tab ${this.state.detailTab === 'deliveries' ? 'active' : ''}" data-detail-tab="deliveries">🚚 التوصيلات</button>
+          <button class="ac-detail-tab ${this.state.detailTab === 'documents' ? 'active' : ''}" data-detail-tab="documents">📷 المستندات</button>
           <button class="ac-detail-tab ${this.state.detailTab === 'log' ? 'active' : ''}" data-detail-tab="log">📜 السجل</button>
         </div>
         <div id="ac-detail-content">${this.renderDetailContent()}</div>
@@ -414,6 +415,7 @@ Router.register('admin-couriers', {
     if (this.state.detailTab === 'info')       return this.renderInfoTab();
     if (this.state.detailTab === 'earnings')   return this.renderEarningsTab();
     if (this.state.detailTab === 'deliveries') return this.renderDeliveriesTab();
+    if (this.state.detailTab === 'documents')  return this.renderDocumentsTab();
     if (this.state.detailTab === 'log')        return this.renderLogTab();
     return '';
   },
@@ -570,6 +572,38 @@ Router.register('admin-couriers', {
     }
   },
 
+  renderDocumentsTab() {
+    return `<div id="ac-documents-loading">${Utils.loadingHTML()}</div>`;
+  },
+
+  async loadDetailDocuments() {
+    try {
+      const { documents } = await API.adminCouriers.documents(this.state.selectedCourier.id);
+      const wrap = document.getElementById('ac-documents-loading');
+      if (!wrap) return;
+      if (!documents || documents.length === 0) {
+        wrap.innerHTML = Utils.emptyHTML('لا توجد مستندات', '', '📷');
+        return;
+      }
+      wrap.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-top:12px;">
+          ${documents.map(d => `
+            <div style="border:1px solid var(--border); border-radius:6px; overflow:hidden; cursor:pointer;" onclick="window.open('${Utils.escape(d.file_url || '')}', '_blank')">
+              <img src="${Utils.escape(d.file_url || '')}" style="width:100%; height:120px; object-fit:cover; background:#f0f0f0;" alt="${Utils.escape(d.document_type || '')}">
+              <div style="padding:8px; font-size:12px; text-align:center;">
+                <div class="text-sm">${Utils.escape(d.document_type || 'مستند')}</div>
+                <div class="text-xs text-muted">${Utils.timeAgo(d.uploaded_at)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } catch (err) {
+      const wrap = document.getElementById('ac-documents-loading');
+      if (wrap) wrap.innerHTML = Utils.errorHTML(err.message);
+    }
+  },
+
   renderLogTab() {
     return `<div id="ac-log-loading">${Utils.loadingHTML()}</div>`;
   },
@@ -628,6 +662,7 @@ Router.register('admin-couriers', {
         if (content) content.innerHTML = this.renderDetailContent();
         if (this.state.detailTab === 'earnings')   this.loadDetailEarnings();
         if (this.state.detailTab === 'deliveries') this.loadDetailDeliveries();
+        if (this.state.detailTab === 'documents')  this.loadDetailDocuments();
         if (this.state.detailTab === 'log')        this.loadDetailLog();
       };
     });

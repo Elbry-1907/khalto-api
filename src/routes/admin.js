@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
 const { authenticate, isAdmin, isAdminOrOps, isFinance } = require('../middleware/auth');
@@ -131,7 +131,7 @@ router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
     if (!full_name || !phone || !password) {
       return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
     }
-    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing','customer','chef','courier'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'الدور غير صحيح' });
     }
@@ -207,7 +207,7 @@ router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
     if (!full_name || !phone || !password) {
       return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
     }
-    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing','customer','chef','courier'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'الدور غير صحيح' });
     }
@@ -283,7 +283,7 @@ router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
     if (!full_name || !phone || !password) {
       return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
     }
-    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing','customer','chef','courier'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'الدور غير صحيح' });
     }
@@ -359,7 +359,7 @@ router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
     if (!full_name || !phone || !password) {
       return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
     }
-    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing','customer','chef','courier'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'الدور غير صحيح' });
     }
@@ -435,7 +435,7 @@ router.post('/users/create', authenticate, isAdmin, async (req, res, next) => {
     if (!full_name || !phone || !password) {
       return res.status(400).json({ error: 'الاسم والهاتف وكلمة المرور مطلوبة' });
     }
-    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing'];
+    const allowedRoles = ['super_admin','operations','finance','customer_service','marketing','customer','chef','courier'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ error: 'الدور غير صحيح' });
     }

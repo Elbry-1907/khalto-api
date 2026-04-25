@@ -156,6 +156,18 @@ const API = {
   },
 
   // ═══════════════════════════════════════════════════════
+  // Cities (NEW)
+  // ═══════════════════════════════════════════════════════
+  cities: {
+    listAll(params)     { return API.get('/countries/cities/all', params); },
+    listByCountry(id)   { return API.get(`/countries/${id}/cities`); },
+    create(countryId, body) { return API.post(`/countries/${countryId}/cities`, body); },
+    update(id, body)    { return API.put(`/countries/cities/${id}`, body); },
+    toggle(id)          { return API.put(`/countries/cities/${id}/toggle`); },
+    delete(id)          { return API.delete(`/countries/cities/${id}`); },
+  },
+
+  // ═══════════════════════════════════════════════════════
   // Settlements
   // ═══════════════════════════════════════════════════════
 

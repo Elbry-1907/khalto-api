@@ -1176,3 +1176,8 @@ Router.register('admin-kitchens', {
 if (window.UserMgmtMixin && Router.pages && Router.pages['admin-kitchens']) {
   Object.assign(Router.pages['admin-kitchens'], window.UserMgmtMixin);
 }
+
+// Apply documents mixin
+if (window.DocumentsMixin && Router.pages && Router.pages['admin-kitchens']) {
+  Object.assign(Router.pages['admin-kitchens'], window.DocumentsMixin);
+}

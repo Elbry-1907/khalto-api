@@ -1197,3 +1197,8 @@ Router.register('admin-couriers', {
 if (window.UserMgmtMixin && Router.pages && Router.pages['admin-couriers']) {
   Object.assign(Router.pages['admin-couriers'], window.UserMgmtMixin);
 }
+
+// Apply documents mixin
+if (window.DocumentsMixin && Router.pages && Router.pages['admin-couriers']) {
+  Object.assign(Router.pages['admin-couriers'], window.DocumentsMixin);
+}

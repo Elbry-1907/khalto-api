@@ -200,7 +200,6 @@ router.post('/:id/cities', validateUUID(), authenticate, requireRole('super_admi
       lat, lng,
       delivery_fee_override, // override country default if set
       is_active,
-      created_at: new Date(),
     }).returning('*');
 
     res.status(201).json({ ok: true, city });

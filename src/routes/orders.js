@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { validateUUID } = require('../middleware/uuid-validator');
 const { v4: uuid } = require('uuid');
 const db     = require('../db');
 const { authenticate, requireRole } = require('../middleware/auth');
@@ -165,7 +166,7 @@ router.get('/', authenticate, async (req, res, next) => {
 });
 
 // ── GET /orders/:id ──
-router.get('/:id', authenticate, async (req, res, next) => {
+router.get('/:id', validateUUID(), authenticate, async (req, res, next) => {
   try {
     const order = await db('orders as o')
       .select('o.*',
@@ -187,7 +188,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
 });
 
 // ── PATCH /orders/:id/status — transition status ──
-router.patch('/:id/status', authenticate, async (req, res, next) => {
+router.patch('/:id/status', validateUUID(), authenticate, async (req, res, next) => {
   const trx = await db.transaction();
   try {
     const { status: newStatus, note } = req.body;
@@ -237,7 +238,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
 });
 
 // ── POST /orders/:id/rate ──
-router.post('/:id/rate', authenticate, requireRole('customer'), async (req, res, next) => {
+router.post('/:id/rate', validateUUID(), authenticate, requireRole('customer'), async (req, res, next) => {
   try {
     const { kitchen_rating, courier_rating, chef_rating, comment } = req.body;
     const order = await db('orders').where({ id: req.params.id, customer_id: req.user.id, status: 'delivered' }).first();

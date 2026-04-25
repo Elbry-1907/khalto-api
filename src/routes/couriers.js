@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { validateUUID } = require('../middleware/uuid-validator');
 const { v4: uuid } = require('uuid');
 const db = require('../db');
 const { authenticate, requireRole, isAdminOrOps } = require('../middleware/auth');
@@ -223,7 +224,7 @@ router.get('/', authenticate, isAdminOrOps, async (req, res, next) => {
 });
 
 // ── POST /couriers/:id/approve ──
-router.post('/:id/approve', authenticate, isAdminOrOps, async (req, res, next) => {
+router.post('/:id/approve', validateUUID(), authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     await db('couriers').where({ id: req.params.id }).update({
       status: 'active',

@@ -12,6 +12,7 @@
  */
 
 const router = require('express').Router();
+const { validateUUID } = require('../middleware/uuid-validator');
 const { v4: uuid } = require('uuid');
 const db     = require('../db');
 const logger = require('../utils/logger');
@@ -71,7 +72,7 @@ router.get('/', async (req, res, next) => {
 // ══════════════════════════════════════════════════════
 // GET /countries/:id — public
 // ══════════════════════════════════════════════════════
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', validateUUID(), async (req, res, next) => {
   try {
     const country = await db('countries').where({ id: req.params.id }).first();
     if (!country) return res.status(404).json({ error: 'الدولة غير موجودة' });
@@ -132,7 +133,7 @@ router.post('/', authenticate, requireRole('super_admin'), async (req, res, next
 // ══════════════════════════════════════════════════════
 // PUT /countries/:id — update all settings
 // ══════════════════════════════════════════════════════
-router.put('/:id', authenticate, requireRole('super_admin'), async (req, res, next) => {
+router.put('/:id', validateUUID(), authenticate, requireRole('super_admin'), async (req, res, next) => {
   try {
     const allowed = [
       'name_ar','name_en','currency','currency_symbol','phone_code',
@@ -157,7 +158,7 @@ router.put('/:id', authenticate, requireRole('super_admin'), async (req, res, ne
 // ══════════════════════════════════════════════════════
 // PUT /countries/:id/toggle — activate/deactivate
 // ══════════════════════════════════════════════════════
-router.put('/:id/toggle', authenticate, requireRole('super_admin'), async (req, res, next) => {
+router.put('/:id/toggle', validateUUID(), authenticate, requireRole('super_admin'), async (req, res, next) => {
   try {
     const country = await db('countries').where({ id: req.params.id }).first();
     if (!country) return res.status(404).json({ error: 'الدولة غير موجودة' });
@@ -177,7 +178,7 @@ router.put('/:id/toggle', authenticate, requireRole('super_admin'), async (req, 
 // ══════════════════════════════════════════════════════
 // GET /countries/:id/cities
 // ══════════════════════════════════════════════════════
-router.get('/:id/cities', async (req, res, next) => {
+router.get('/:id/cities', validateUUID(), async (req, res, next) => {
   try {
     const cities = await db('cities').where({ country_id: req.params.id }).orderBy('name_ar');
     res.json({ cities });
@@ -187,7 +188,7 @@ router.get('/:id/cities', async (req, res, next) => {
 // ══════════════════════════════════════════════════════
 // POST /countries/:id/cities
 // ══════════════════════════════════════════════════════
-router.post('/:id/cities', authenticate, requireRole('super_admin'), async (req, res, next) => {
+router.post('/:id/cities', validateUUID(), authenticate, requireRole('super_admin'), async (req, res, next) => {
   try {
     const { name_ar, name_en, lat, lng, delivery_fee_override, is_active = true } = req.body;
     if (!name_ar) return res.status(400).json({ error: 'اسم المدينة مطلوب' });

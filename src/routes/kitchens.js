@@ -2,6 +2,7 @@
 // src/routes/kitchens.js
 // ============================================================
 const router = require('express').Router();
+const { validateUUID } = require('../middleware/uuid-validator');
 const { v4: uuid } = require('uuid');
 const db = require('../db');
 const { authenticate, requireRole, isAdmin, isAdminOrOps } = require('../middleware/auth');
@@ -29,7 +30,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // GET /kitchens/:id
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', validateUUID(), async (req, res, next) => {
   try {
     const kitchen = await db('kitchens').where({ id: req.params.id }).first();
     if (!kitchen) return res.status(404).json({ error: 'Kitchen not found' });
@@ -51,7 +52,7 @@ router.post('/', authenticate, requireRole('chef'), async (req, res, next) => {
 });
 
 // PATCH /kitchens/:id — update
-router.patch('/:id', authenticate, async (req, res, next) => {
+router.patch('/:id', validateUUID(), authenticate, async (req, res, next) => {
   try {
     const kitchen = await db('kitchens').where({ id: req.params.id }).first();
     if (!kitchen) return res.status(404).json({ error: 'Not found' });
@@ -70,7 +71,7 @@ router.patch('/:id', authenticate, async (req, res, next) => {
 });
 
 // POST /kitchens/:id/approve — admin
-router.post('/:id/approve', authenticate, isAdminOrOps, async (req, res, next) => {
+router.post('/:id/approve', validateUUID(), authenticate, isAdminOrOps, async (req, res, next) => {
   try {
     await db('kitchens').where({ id: req.params.id }).update({
       status: 'active', approved_by: req.user.id, approved_at: new Date()

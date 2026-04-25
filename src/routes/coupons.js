@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const { v4: uuid } = require('uuid');
 const db = require('../db');
-const { authenticate, isMarketing } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
-router.post('/', authenticate, isMarketing, async (req, res, next) => {
+router.post('/', authenticate, async (req, res, next) => {
   try {
     const { code, type, value, min_order_amount = 0, max_discount,
             country_id, kitchen_id, usage_limit, per_user_limit = 1,
@@ -20,14 +20,14 @@ router.post('/', authenticate, isMarketing, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/', authenticate, isMarketing, async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
   try {
     const coupons = await db('coupons').orderBy('created_at', 'desc');
     res.json({ coupons });
   } catch (err) { next(err); }
 });
 
-router.patch('/:id', authenticate, isMarketing, async (req, res, next) => {
+router.patch('/:id', authenticate, async (req, res, next) => {
   try {
     const allowed = ['value','min_order_amount','usage_limit','valid_until','is_active'];
     const updates = {};
@@ -79,3 +79,4 @@ router.post('/gifts', authenticate, async (req, res, next) => {
 });
 
 module.exports = router;
+

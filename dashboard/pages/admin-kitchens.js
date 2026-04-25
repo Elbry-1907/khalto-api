@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    Page: Admin Kitchens Management
    Full CRUD + lifecycle for kitchens
    ═══════════════════════════════════════════════════════════ */
@@ -607,6 +607,7 @@ Router.register('admin-kitchens', {
     });
 
     // Close
+    if (this.attachUserActionHandlers) this.attachUserActionHandlers();
     const closeBtn = document.querySelector('[data-modal-close]');
     if (closeBtn) closeBtn.onclick = () => this.closeModal();
   },
@@ -1103,3 +1104,8 @@ Router.register('admin-kitchens', {
   },
 
 });
+
+// Apply user management mixin
+if (window.UserMgmtMixin && Router.routes && Router.routes['admin-kitchens']) {
+  Object.assign(Router.routes['admin-kitchens'], window.UserMgmtMixin);
+}

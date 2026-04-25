@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    Page: Admin Couriers Management
    Full CRUD + lifecycle for couriers
    ═══════════════════════════════════════════════════════════ */
@@ -481,6 +481,17 @@ Router.register('admin-couriers', {
           <button class="btn btn-secondary" data-set-availability="offline" data-courier="${c.id}">⚪ إجبار offline</button>
         ` : ''}
       </div>
+
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+        <div class="ac-info-title" style="margin-bottom:10px;">👤 إدارة حساب المستخدم</div>
+        ${c.blocked_at ? `
+          <div style="background:#FED7D7; padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px;">
+            <strong>🚫 المستخدم محظور</strong>
+            ${c.blocked_reason ? `<br><span class="text-sm">السبب: ${Utils.escape(c.blocked_reason)}</span>` : ''}
+          </div>
+          ${this.renderUnblockButton ? this.renderUnblockButton(c.user_id, c.user_name) : ''}
+        ` : (this.renderUserActions ? this.renderUserActions(c.user_id, c.user_name) : '')}
+      </div>
     `;
   },
 
@@ -635,6 +646,7 @@ Router.register('admin-couriers', {
       btn.onclick = () => this.setAvailability(btn.dataset.courier, btn.dataset.setAvailability);
     });
 
+    if (this.attachUserActionHandlers) this.attachUserActionHandlers();
     const closeBtn = document.querySelector('[data-modal-close]');
     if (closeBtn) closeBtn.onclick = () => this.closeModal();
   },
@@ -1127,3 +1139,8 @@ Router.register('admin-couriers', {
   },
 
 });
+
+// Apply user management mixin
+if (window.UserMgmtMixin && Router.routes && Router.routes['admin-couriers']) {
+  Object.assign(Router.routes['admin-couriers'], window.UserMgmtMixin);
+}

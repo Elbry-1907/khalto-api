@@ -412,7 +412,7 @@ Router.register('admin-kitchens', {
         <div class="ak-info-section">
           <div class="ak-info-title">💰 الإعدادات المالية</div>
           <div class="ak-info-row"><span>العمولة:</span><strong>${Number(k.commission_pct || 0)}%</strong></div>
-          <div class="ak-info-row"><span>الحد الأدنى:</span><strong>${Number(k.min_order_amount || 0)} ر.س</strong></div>
+          <div class="ak-info-row"><span>الحد الأدنى:</span><strong>${Currency.format(k.min_order_amount || 0, k)}</strong></div>
           <div class="ak-info-row"><span>السجل التجاري:</span><strong>${Utils.escape(k.commercial_register || '—')}</strong></div>
           <div class="ak-info-row"><span>الرقم الضريبي:</span><strong>${Utils.escape(k.tax_number || '—')}</strong></div>
           <div class="ak-info-row"><span>IBAN:</span><strong style="direction:ltr; text-align:left;">${Utils.escape(k.bank_account_iban || '—')}</strong></div>
@@ -475,10 +475,10 @@ Router.register('admin-kitchens', {
           <div class="ak-stat-card"><div class="ak-stat-label">عدد الطلبات</div><div class="ak-stat-value">${overall?.orders_count || 0}</div></div>
           <div class="ak-stat-card"><div class="ak-stat-label">المُسلَّمة</div><div class="ak-stat-value">${overall?.delivered || 0}</div></div>
           <div class="ak-stat-card"><div class="ak-stat-label">الملغية</div><div class="ak-stat-value">${overall?.cancelled || 0}</div></div>
-          <div class="ak-stat-card"><div class="ak-stat-label">الإيرادات</div><div class="ak-stat-value">${Number(overall?.gross_revenue || 0).toFixed(0)} ر.س</div></div>
-          <div class="ak-stat-card"><div class="ak-stat-label">عمولة المنصة</div><div class="ak-stat-value">${Number(overall?.platform_commission || 0).toFixed(0)} ر.س</div></div>
-          <div class="ak-stat-card"><div class="ak-stat-label">صافي الطاهي</div><div class="ak-stat-value">${Number(overall?.net_payout || 0).toFixed(0)} ر.س</div></div>
-          <div class="ak-stat-card"><div class="ak-stat-label">متوسط الطلب</div><div class="ak-stat-value">${Number(overall?.avg_order_value || 0).toFixed(0)} ر.س</div></div>
+          <div class="ak-stat-card"><div class="ak-stat-label">الإيرادات</div><div class="ak-stat-value">${Currency.format(overall?.gross_revenue || 0, this.state.selectedKitchen)}</div></div>
+          <div class="ak-stat-card"><div class="ak-stat-label">عمولة المنصة</div><div class="ak-stat-value">${Currency.format(overall?.platform_commission || 0, this.state.selectedKitchen)}</div></div>
+          <div class="ak-stat-card"><div class="ak-stat-label">صافي الطاهي</div><div class="ak-stat-value">${Currency.format(overall?.net_payout || 0, this.state.selectedKitchen)}</div></div>
+          <div class="ak-stat-card"><div class="ak-stat-label">متوسط الطلب</div><div class="ak-stat-value">${Currency.format(overall?.avg_order_value || 0, this.state.selectedKitchen)}</div></div>
         </div>
         <p class="text-sm text-muted" style="margin-top:14px;">آخر 30 يوم</p>
         ${daily && daily.length > 0 ? `
@@ -489,7 +489,7 @@ Router.register('admin-kitchens', {
               <tbody>
                 ${daily.slice(-7).reverse().map(d => `
                   <tr><td>${new Date(d.date).toLocaleDateString('ar-SA')}</td>
-                  <td>${d.orders}</td><td>${Number(d.revenue).toFixed(0)} ر.س</td></tr>
+                  <td>${d.orders}</td><td>${Currency.format(d.revenue, this.state.selectedKitchen)}</td></tr>
                 `).join('')}
               </tbody>
             </table>
@@ -524,7 +524,7 @@ Router.register('admin-kitchens', {
               <tr>
                 <td>${Utils.escape(o.customer_name || '—')}<br><span class="text-sm text-muted">${Utils.escape(o.customer_phone || '')}</span></td>
                 <td><span class="badge order-${o.status}">${o.status}</span></td>
-                <td><strong>${Number(o.total_amount || 0).toFixed(0)} ر.س</strong></td>
+                <td><strong>${Currency.format(o.total_amount || 0, this.state.selectedKitchen)}</strong></td>
                 <td class="text-sm text-muted">${Utils.timeAgo(o.created_at)}</td>
               </tr>
             `).join('')}
@@ -745,6 +745,11 @@ Router.register('admin-kitchens', {
   renderCreateForm(chefs) {
     return `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>الدولة *</label>
+          ${Currency.countrySelector('', 'create-country-id')}
+          <p class="text-sm text-muted" style="margin-top:6px;">يحدد عملة المطبخ والعمولة الافتراضية</p>
+        </div>
         <div class="form-group">
           <label>الطاهي (المالك) *</label>
           <select id="create-user-id">
@@ -802,9 +807,24 @@ Router.register('admin-kitchens', {
       bio_ar:            document.getElementById('create-bio').value.trim(),
     };
 
+    const countryId = document.getElementById('create-country-id').value;
     if (!data.user_id || !data.name_ar || !data.name_en) {
       Utils.error('الحقول الأساسية مطلوبة');
       return;
+    }
+    if (!countryId) {
+      Utils.error('يجب اختيار الدولة');
+      return;
+    }
+    data.country_id = countryId;
+
+    // Auto-set commission from country if default
+    const country = Currency._cache?.[countryId];
+    if (country && data.commission_pct === 15) {
+      data.commission_pct = country.default_commission_pct || 15;
+    }
+    if (country && data.min_order_amount === 0) {
+      data.min_order_amount = country.default_min_order_amount || 0;
     }
 
     try {

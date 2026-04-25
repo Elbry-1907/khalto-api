@@ -309,6 +309,7 @@ router.post('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, nex
   try {
     const {
       user_id, name_ar, name_en, bio_ar, bio_en, city_id,
+      country_id,
       lat, lng, contact_phone, contact_email,
       commission_pct, min_order_amount,
     } = req.body;
@@ -324,13 +325,27 @@ router.post('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, nex
       return res.status(400).json({ error: 'المستخدم ليس طاهي' });
     }
 
+    // If country_id provided, fetch defaults
+    let countryDefaults = {};
+    if (country_id) {
+      const c = await db('countries').where({ id: country_id }).first();
+      if (c) {
+        countryDefaults = {
+          default_commission: c.default_commission_pct,
+          default_min_order: c.default_min_order_amount,
+        };
+        // Update user's country_id if needed
+        await db('users').where({ id: user_id }).update({ country_id });
+      }
+    }
+
     const [kitchen] = await db('kitchens').insert({
       id: uuid(),
       user_id,
       name_ar, name_en, bio_ar, bio_en, city_id,
       lat, lng, contact_phone, contact_email,
-      commission_pct: commission_pct || 15,
-      min_order_amount: min_order_amount || 0,
+      commission_pct: commission_pct || countryDefaults.default_commission || 15,
+      min_order_amount: min_order_amount || countryDefaults.default_min_order || 0,
       status: 'active', // admin-created kitchens go straight to active
       approved_by: req.user.id,
       approved_at: new Date(),

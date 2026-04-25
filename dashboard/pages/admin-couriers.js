@@ -257,7 +257,7 @@ Router.register('admin-couriers', {
           <div style="font-weight:600;">${c.total_deliveries || 0}</div>
           ${c.cancelled_deliveries > 0 ? `<div class="text-sm text-muted">${c.cancelled_deliveries} ملغية</div>` : ''}
         </td>
-        <td><strong>${Number(c.total_earnings || 0).toFixed(0)} ر.س</strong></td>
+        <td><strong>${Currency.format(c.total_earnings || 0, c)}</strong></td>
         <td>
           <div title="${rating}">${ratingStars}</div>
           <div class="text-sm text-muted">${c.rating_count || 0} تقييم</div>
@@ -449,7 +449,7 @@ Router.register('admin-couriers', {
         <div class="ac-info-section">
           <div class="ac-info-title">💰 الإعدادات المالية</div>
           <div class="ac-info-row"><span>نسبة المندوب:</span><strong>${Number(c.delivery_percentage || 80)}%</strong></div>
-          <div class="ac-info-row"><span>إجمالي الأرباح:</span><strong>${Number(c.total_earnings || 0).toFixed(0)} ر.س</strong></div>
+          <div class="ac-info-row"><span>إجمالي الأرباح:</span><strong>${Currency.format(c.total_earnings || 0, c)}</strong></div>
           <div class="ac-info-row"><span>إجمالي التوصيلات:</span><strong>${c.total_deliveries || 0}</strong></div>
           <div class="ac-info-row"><span>التوصيلات الملغية:</span><strong>${c.cancelled_deliveries || 0}</strong></div>
           <div class="ac-info-row"><span>IBAN:</span><strong style="direction:ltr; text-align:left; font-size:12px;">${Utils.escape(c.bank_account_iban || '—')}</strong></div>
@@ -509,8 +509,8 @@ Router.register('admin-couriers', {
           <div class="ac-stat-card"><div class="ac-stat-label">عدد التوصيلات</div><div class="ac-stat-value">${overall?.deliveries_count || 0}</div></div>
           <div class="ac-stat-card"><div class="ac-stat-label">المُكتملة</div><div class="ac-stat-value">${overall?.completed || 0}</div></div>
           <div class="ac-stat-card"><div class="ac-stat-label">الملغية</div><div class="ac-stat-value">${overall?.cancelled || 0}</div></div>
-          <div class="ac-stat-card"><div class="ac-stat-label">إجمالي الأرباح</div><div class="ac-stat-value">${Number(overall?.total_earnings || 0).toFixed(0)} ر.س</div></div>
-          <div class="ac-stat-card"><div class="ac-stat-label">متوسط التوصيلة</div><div class="ac-stat-value">${Number(overall?.avg_per_delivery || 0).toFixed(0)} ر.س</div></div>
+          <div class="ac-stat-card"><div class="ac-stat-label">إجمالي الأرباح</div><div class="ac-stat-value">${Currency.format(overall?.total_earnings || 0, this.state.selectedCourier)}</div></div>
+          <div class="ac-stat-card"><div class="ac-stat-label">متوسط التوصيلة</div><div class="ac-stat-value">${Currency.format(overall?.avg_per_delivery || 0, this.state.selectedCourier)}</div></div>
         </div>
         <p class="text-sm text-muted" style="margin-top:14px;">آخر 30 يوم</p>
         ${daily && daily.length > 0 ? `
@@ -521,7 +521,7 @@ Router.register('admin-couriers', {
               <tbody>
                 ${daily.slice(-7).reverse().map(d => `
                   <tr><td>${new Date(d.date).toLocaleDateString('ar-SA')}</td>
-                  <td>${d.deliveries}</td><td>${Number(d.earnings).toFixed(0)} ر.س</td></tr>
+                  <td>${d.deliveries}</td><td>${Currency.format(d.earnings, this.state.selectedCourier)}</td></tr>
                 `).join('')}
               </tbody>
             </table>
@@ -557,7 +557,7 @@ Router.register('admin-couriers', {
                 <td>${Utils.escape(o.kitchen_name || '—')}</td>
                 <td>${Utils.escape(o.customer_name || '—')}<br><span class="text-sm text-muted">${Utils.escape(o.customer_phone || '')}</span></td>
                 <td><span class="badge order-${o.status}">${o.status}</span></td>
-                <td><strong>${Number(o.courier_payout || 0).toFixed(0)} ر.س</strong></td>
+                <td><strong>${Currency.format(o.courier_payout || 0, this.state.selectedCourier)}</strong></td>
                 <td class="text-sm text-muted">${Utils.timeAgo(o.created_at)}</td>
               </tr>
             `).join('')}
@@ -772,6 +772,11 @@ Router.register('admin-couriers', {
   renderCreateForm(couriers) {
     return `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>الدولة *</label>
+          ${Currency.countrySelector('', 'create-country-id')}
+          <p class="text-sm text-muted" style="margin-top:6px;">يحدد عملة المندوب والقيم الافتراضية</p>
+        </div>
         <div class="form-group">
           <label>المستخدم *</label>
           <select id="create-user-id">
@@ -823,9 +828,21 @@ Router.register('admin-couriers', {
       delivery_percentage: Number(document.getElementById('create-percentage').value) || 80,
     };
 
+    const countryId = document.getElementById('create-country-id').value;
     if (!data.user_id) {
       Utils.error('يجب اختيار مستخدم');
       return;
+    }
+    if (!countryId) {
+      Utils.error('يجب اختيار الدولة');
+      return;
+    }
+    data.country_id = countryId;
+
+    // Auto-set delivery_percentage from country if not provided
+    const country = Currency._cache?.[countryId];
+    if (country && !data.delivery_percentage) {
+      data.delivery_percentage = country.default_courier_percentage || 80;
     }
 
     try {

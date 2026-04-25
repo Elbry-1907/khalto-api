@@ -340,7 +340,7 @@ router.get('/:id/status-log', validateUUID(), authenticate, requireRole(...ADMIN
 router.post('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const {
-      user_id, city_id, vehicle_type, vehicle_plate,
+      user_id, city_id, country_id, vehicle_type, vehicle_plate,
       national_id, license_number, license_expiry,
       delivery_percentage,
     } = req.body;
@@ -355,6 +355,11 @@ router.post('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, nex
 
     const existing = await db('couriers').where({ user_id }).first();
     if (existing) return res.status(409).json({ error: 'المستخدم مسجّل كمندوب بالفعل' });
+
+    // Update user's country_id if provided
+    if (country_id) {
+      await db('users').where({ id: user_id }).update({ country_id });
+    }
 
     const [courier] = await db('couriers').insert({
       id: uuid(),

@@ -1,4 +1,4 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+﻿process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 require('dotenv').config();
 const { Client } = require('pg');
@@ -30,6 +30,7 @@ const migrations = [
   path.join(__dirname, 'migrations/022_force_country_defaults.sql'),
   path.join(__dirname, 'migrations/023_documents_system.sql'),
   path.join(__dirname, 'migrations/024_currency_fix.sql'),
+    path.join(__dirname, 'migrations/026_assign_default_cities.sql'),
 ];
 
 async function migrate() {
@@ -40,7 +41,7 @@ async function migrate() {
 
   try {
     await client.connect();
-    console.log('✅ Connected to database\n');
+    console.log('âœ… Connected to database\n');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
@@ -59,12 +60,12 @@ async function migrate() {
       );
 
       if (rows.length > 0) {
-        console.log(`  ⏭️  Skipping: ${filename} (already applied)`);
+        console.log(`  â­ï¸  Skipping: ${filename} (already applied)`);
         continue;
       }
 
       if (!fs.existsSync(filepath)) {
-        console.log(`  ⚠️  File not found: ${filename}`);
+        console.log(`  âš ï¸  File not found: ${filename}`);
         continue;
       }
 
@@ -78,18 +79,18 @@ async function migrate() {
           [filename]
         );
         await client.query('COMMIT');
-        console.log(`  ✅ Applied: ${filename}`);
+        console.log(`  âœ… Applied: ${filename}`);
       } catch (err) {
         await client.query('ROLLBACK');
-        console.error(`  ❌ Failed: ${filename}`);
+        console.error(`  âŒ Failed: ${filename}`);
         console.error(`     Error: ${err.message}`);
         // Continue with next migration
       }
     }
 
-    console.log('\n🎉 Migration complete!');
+    console.log('\nðŸŽ‰ Migration complete!');
   } catch (err) {
-    console.error('❌ Migration error:', err.message);
+    console.error('âŒ Migration error:', err.message);
     process.exit(1);
   } finally {
     await client.end();

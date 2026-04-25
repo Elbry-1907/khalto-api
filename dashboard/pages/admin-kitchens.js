@@ -1117,6 +1117,6 @@ Router.register('admin-kitchens', {
 });
 
 // Apply user management mixin
-if (window.UserMgmtMixin && Router.routes && Router.routes['admin-kitchens']) {
-  Object.assign(Router.routes['admin-kitchens'], window.UserMgmtMixin);
+if (window.UserMgmtMixin && Router.pages && Router.pages['admin-kitchens']) {
+  Object.assign(Router.pages['admin-kitchens'], window.UserMgmtMixin);
 }

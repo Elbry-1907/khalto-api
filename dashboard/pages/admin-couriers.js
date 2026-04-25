@@ -1141,6 +1141,6 @@ Router.register('admin-couriers', {
 });
 
 // Apply user management mixin
-if (window.UserMgmtMixin && Router.routes && Router.routes['admin-couriers']) {
-  Object.assign(Router.routes['admin-couriers'], window.UserMgmtMixin);
+if (window.UserMgmtMixin && Router.pages && Router.pages['admin-couriers']) {
+  Object.assign(Router.pages['admin-couriers'], window.UserMgmtMixin);
 }

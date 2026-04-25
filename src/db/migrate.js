@@ -27,6 +27,7 @@ const migrations = [
   path.join(__dirname, 'migrations/019_fix_users.sql'),
   path.join(__dirname, 'migrations/020_user_mgmt_documents.sql'),
   path.join(__dirname, 'migrations/021_country_defaults.sql'),
+  path.join(__dirname, 'migrations/022_force_country_defaults.sql'),
 ];
 
 async function migrate() {

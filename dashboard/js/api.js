@@ -242,6 +242,23 @@ const API = {
     setCountryMapping(body) { return API.put('/providers/country-mapping', body); },
     testLogs(providerId)    { return API.get(`/providers/test-logs/${providerId}`); },
   },
+    adminKitchens: {
+    list(params)              { return API.get('/admin/kitchens', params); },
+    stats()                   { return API.get('/admin/kitchens/stats'); },
+    get(id)                   { return API.get(`/admin/kitchens/${id}`); },
+    orders(id, params)        { return API.get(`/admin/kitchens/${id}/orders`, params); },
+    kitchenStats(id, params)  { return API.get(`/admin/kitchens/${id}/stats`, params); },
+    statusLog(id)             { return API.get(`/admin/kitchens/${id}/status-log`); },
+    create(body)              { return API.post('/admin/kitchens', body); },
+    update(id, body)          { return API.put(`/admin/kitchens/${id}`, body); },
+    approve(id)               { return API.post(`/admin/kitchens/${id}/approve`); },
+    reject(id, reason)        { return API.post(`/admin/kitchens/${id}/reject`, { reason }); },
+    suspend(id, reason)       { return API.post(`/admin/kitchens/${id}/suspend`, { reason }); },
+    unsuspend(id)             { return API.post(`/admin/kitchens/${id}/unsuspend`); },
+    toggle(id)                { return API.put(`/admin/kitchens/${id}/toggle`); },
+    setCommission(id, pct)    { return API.put(`/admin/kitchens/${id}/commission`, { commission_pct: pct }); },
+  },
+
 
 };
 

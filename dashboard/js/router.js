@@ -58,6 +58,7 @@ const Router = {
       dashboard: 'لوحة التحكم',
       orders: 'الطلبات',
       kitchens: 'المطابخ',
+      'admin-kitchens': 'إدارة المطابخ',
       couriers: 'المندوبين',
       customers: 'العملاء',
       settlements: 'التسويات',

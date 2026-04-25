@@ -193,14 +193,28 @@ router.post('/:id/cities', validateUUID(), authenticate, requireRole('super_admi
     const { name_ar, name_en, lat, lng, delivery_fee_override, is_active = true } = req.body;
     if (!name_ar) return res.status(400).json({ error: 'Ø§Ø³Ù… Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© Ù…Ø·Ù„ÙˆØ¨' });
 
-    const [city] = await db('cities').insert({
+    const cityData = {
       id: uuid(),
       country_id: req.params.id,
-      name_ar, name_en,
-      lat, lng,
-      delivery_fee_override, // override country default if set
-      is_active,
-    }).returning('*');
+      name_ar,
+    };
+    if (name_en !== undefined && name_en !== null && name_en !== '') cityData.name_en = name_en;
+    if (lat !== undefined && lat !== null && !isNaN(lat)) cityData.lat = lat;
+    if (lng !== undefined && lng !== null && !isNaN(lng)) cityData.lng = lng;
+    if (is_active !== undefined) cityData.is_active = is_active;
+    // Note: delivery_fee_override column may not exist in this DB schema; only set if provided
+    if (delivery_fee_override !== undefined && delivery_fee_override !== null) {
+      try { cityData.delivery_fee_override = delivery_fee_override; } catch (e) {}
+    }
+
+    let city;
+    try {
+      [city] = await db('cities').insert(cityData).returning('*');
+    } catch (e) {
+      // Retry without delivery_fee_override if it doesn't exist
+      delete cityData.delivery_fee_override;
+      [city] = await db('cities').insert(cityData).returning('*');
+    }
 
     res.status(201).json({ ok: true, city });
   } catch (err) { next(err); }

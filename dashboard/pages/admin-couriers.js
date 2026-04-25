@@ -578,7 +578,7 @@ Router.register('admin-couriers', {
 
   async loadDetailDocuments() {
     try {
-      const { documents } = await API.adminCouriers.documents(this.state.selectedCourier.id);
+      const { documents } = await API.adminDocuments.listForCourier(this.state.selectedCourier.id);
       const wrap = document.getElementById('ac-documents-loading');
       if (!wrap) return;
       if (!documents || documents.length === 0) {

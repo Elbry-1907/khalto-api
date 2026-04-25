@@ -545,7 +545,7 @@ Router.register('admin-kitchens', {
 
   async loadDetailDocuments() {
     try {
-      const { documents } = await API.adminKitchens.documents(this.state.selectedKitchen.id);
+      const { documents } = await API.adminDocuments.listForKitchen(this.state.selectedKitchen.id);
       const wrap = document.getElementById('ak-documents-loading');
       if (!wrap) return;
       if (!documents || documents.length === 0) {

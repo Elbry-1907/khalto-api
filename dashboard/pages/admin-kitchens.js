@@ -447,6 +447,17 @@ Router.register('admin-kitchens', {
         <button class="btn btn-secondary" data-edit-kitchen="${k.id}">✏️ تعديل البيانات</button>
         <button class="btn btn-secondary" data-edit-commission="${k.id}">💰 تعديل العمولة</button>
       </div>
+
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+        <div class="ak-info-title" style="margin-bottom:10px;">👤 إدارة حساب المستخدم</div>
+        ${k.blocked_at ? `
+          <div style="background:#FED7D7; padding:10px; border-radius:6px; margin-bottom:10px; font-size:13px;">
+            <strong>🚫 المستخدم محظور</strong>
+            ${k.blocked_reason ? `<br><span class="text-sm">السبب: ${Utils.escape(k.blocked_reason)}</span>` : ''}
+          </div>
+          ${this.renderUnblockButton ? this.renderUnblockButton(k.user_id, k.owner_name) : ''}
+        ` : (this.renderUserActions ? this.renderUserActions(k.user_id, k.owner_name) : '')}
+      </div>
     `;
   },
 

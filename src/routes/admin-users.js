@@ -1,17 +1,5 @@
 /**
- * Khalto — Admin User Management
- * Full lifecycle management for any user (customer, chef, courier, admin)
- *
- * Endpoints:
- *   GET    /admin/users                    — List with filters
- *   GET    /admin/users/:id                — Full user details
- *   GET    /admin/users/:id/action-log     — User action history
- *   POST   /admin/users/create             — Create new user (any role)
- *   PUT    /admin/users/:id                — Update profile
- *   POST   /admin/users/:id/reset-password — Generate new password
- *   POST   /admin/users/:id/block          — Block from logging in
- *   POST   /admin/users/:id/unblock        — Restore access
- *   DELETE /admin/users/:id                — Soft delete
+ * Khalto — Admin User Management (with Multi-Country support)
  */
 
 const router = require('express').Router();
@@ -28,7 +16,6 @@ const ALL_ROLES = [
   'customer', 'chef', 'courier',
 ];
 
-// ── Helper: generate readable password ─────────────
 function generatePassword() {
   const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
   let p = '';
@@ -36,7 +23,6 @@ function generatePassword() {
   return 'Khalto' + p + '!';
 }
 
-// ── Helper: log user action ────────────────────────
 async function logAction(userId, action, doneBy, reason, metadata) {
   try {
     await db('user_action_log').insert({
@@ -52,9 +38,22 @@ async function logAction(userId, action, doneBy, reason, metadata) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// GET /admin/users — list with filters
-// ═══════════════════════════════════════════════════════════
+// Build country join into selects so we always know the user's country
+function userQuery() {
+  return db('users as u')
+    .leftJoin('countries as co', 'co.id', 'u.country_id')
+    .select(
+      'u.id', 'u.full_name', 'u.phone', 'u.email', 'u.role',
+      'u.is_active', 'u.is_verified', 'u.blocked_at', 'u.blocked_reason',
+      'u.country_code', 'u.country_id', 'u.last_login_at', 'u.created_at',
+      'co.name_ar as country_name',
+      'co.code as country_iso',
+      'co.currency_code',
+      'co.currency_symbol'
+    );
+}
+
+// ═══ GET /admin/users ═══════════════════════════════════
 router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const {
@@ -63,11 +62,7 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
     } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    let q = db('users as u').select(
-      'u.id', 'u.full_name', 'u.phone', 'u.email', 'u.role',
-      'u.is_active', 'u.is_verified', 'u.blocked_at', 'u.blocked_reason',
-      'u.country_code', 'u.country_id', 'u.last_login_at', 'u.created_at'
-    );
+    let q = userQuery();
 
     if (role) q = q.where('u.role', role);
     if (country_id) q = q.where('u.country_id', country_id);
@@ -99,26 +94,17 @@ router.get('/', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// GET /admin/users/:id — full details
-// ═══════════════════════════════════════════════════════════
+// ═══ GET /admin/users/:id ═══════════════════════════════
 router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
-    const user = await db('users as u')
+    const user = await userQuery()
       .leftJoin('users as bb', 'bb.id', 'u.blocked_by')
       .where('u.id', req.params.id)
-      .select(
-        'u.id', 'u.full_name', 'u.phone', 'u.email', 'u.role',
-        'u.is_active', 'u.is_verified', 'u.blocked_at', 'u.blocked_reason',
-        'u.country_code', 'u.country_id', 'u.last_login_at',
-        'u.password_reset_at', 'u.created_at', 'u.updated_at',
-        'bb.full_name as blocked_by_name'
-      )
+      .select('bb.full_name as blocked_by_name')
       .first();
 
     if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
 
-    // If chef, get kitchen
     let kitchen = null;
     if (user.role === 'chef') {
       kitchen = await db('kitchens')
@@ -127,7 +113,6 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
         .first();
     }
 
-    // If courier, get courier profile
     let courier = null;
     if (user.role === 'courier') {
       courier = await db('couriers')
@@ -140,9 +125,7 @@ router.get('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// GET /admin/users/:id/action-log
-// ═══════════════════════════════════════════════════════════
+// ═══ GET /admin/users/:id/action-log ═══════════════════
 router.get('/:id/action-log', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const logs = await db('user_action_log as l')
@@ -155,9 +138,7 @@ router.get('/:id/action-log', validateUUID(), authenticate, requireRole(...ADMIN
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// POST /admin/users/create — create user (any role)
-// ═══════════════════════════════════════════════════════════
+// ═══ POST /admin/users/create ══════════════════════════
 router.post('/create', authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const {
@@ -181,29 +162,39 @@ router.post('/create', authenticate, requireRole(...ADMIN_ROLES), async (req, re
       if (emailExists) return res.status(409).json({ error: 'البريد الإلكتروني مسجّل مسبقاً' });
     }
 
+    // Resolve country: if country_id given, verify; else if country_code, look up
+    let finalCountryId = country_id || null;
+    let finalCountryCode = country_code || null;
+
+    if (finalCountryId) {
+      const c = await db('countries').where({ id: finalCountryId }).first();
+      if (!c) return res.status(400).json({ error: 'الدولة غير موجودة' });
+      finalCountryCode = c.code;
+    } else if (finalCountryCode) {
+      const c = await db('countries').where({ code: finalCountryCode }).first();
+      if (c) finalCountryId = c.id;
+    }
+
     const finalPassword = password || generatePassword();
     const hashed = await bcrypt.hash(finalPassword, 10);
 
     const [user] = await db('users').insert({
       id: uuid(),
-      full_name,
-      phone,
+      full_name, phone,
       email: email || null,
       password_hash: hashed,
       role,
-      country_code: country_code || null,
-      country_id: country_id || null,
+      country_code: finalCountryCode,
+      country_id: finalCountryId,
       is_active: true,
       is_verified: true,
       created_at: new Date(),
       updated_at: new Date(),
-    }).returning(['id', 'full_name', 'phone', 'email', 'role', 'is_active', 'created_at']);
+    }).returning(['id', 'full_name', 'phone', 'email', 'role', 'country_id', 'is_active', 'created_at']);
 
-    await logAction(user.id, 'created', req.user.id, 'تم الإنشاء من الإدارة', { role });
-
+    await logAction(user.id, 'created', req.user.id, 'تم الإنشاء من الإدارة', { role, country_id: finalCountryId });
     logger.info('User created by admin', { id: user.id, by: req.user.id, role });
 
-    // Return password only if admin didn't supply one (so admin sees the generated one)
     const response = { ok: true, user };
     if (!password) response.generated_password = finalPassword;
 
@@ -211,9 +202,7 @@ router.post('/create', authenticate, requireRole(...ADMIN_ROLES), async (req, re
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// PUT /admin/users/:id — update profile
-// ═══════════════════════════════════════════════════════════
+// ═══ PUT /admin/users/:id ══════════════════════════════
 router.put('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const allowed = ['full_name', 'phone', 'email', 'country_code', 'country_id', 'is_verified'];
@@ -227,23 +216,27 @@ router.put('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
     const existing = await db('users').where({ id: req.params.id }).first();
     if (!existing) return res.status(404).json({ error: 'المستخدم غير موجود' });
 
-    // Check phone uniqueness if changed
     if (updates.phone && updates.phone !== existing.phone) {
       const dup = await db('users').where({ phone: updates.phone }).whereNot({ id: req.params.id }).first();
       if (dup) return res.status(409).json({ error: 'رقم الهاتف مسجّل لمستخدم آخر' });
     }
-
-    // Check email uniqueness if changed
     if (updates.email && updates.email !== existing.email) {
       const dup = await db('users').where({ email: updates.email }).whereNot({ id: req.params.id }).first();
       if (dup) return res.status(409).json({ error: 'البريد مسجّل لمستخدم آخر' });
+    }
+
+    // If country_id changed, sync country_code
+    if (updates.country_id && updates.country_id !== existing.country_id) {
+      const c = await db('countries').where({ id: updates.country_id }).first();
+      if (!c) return res.status(400).json({ error: 'الدولة غير موجودة' });
+      updates.country_code = c.code;
     }
 
     updates.updated_at = new Date();
     const [updated] = await db('users')
       .where({ id: req.params.id })
       .update(updates)
-      .returning(['id', 'full_name', 'phone', 'email', 'role', 'is_verified']);
+      .returning(['id', 'full_name', 'phone', 'email', 'role', 'country_id', 'is_verified']);
 
     await logAction(req.params.id, 'profile_updated', req.user.id, null, { fields: Object.keys(updates) });
 
@@ -251,9 +244,7 @@ router.put('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), as
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// POST /admin/users/:id/reset-password
-// ═══════════════════════════════════════════════════════════
+// ═══ POST /admin/users/:id/reset-password ══════════════
 router.post('/:id/reset-password', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const user = await db('users').where({ id: req.params.id }).first();
@@ -270,7 +261,6 @@ router.post('/:id/reset-password', validateUUID(), authenticate, requireRole(...
     });
 
     await logAction(req.params.id, 'password_reset', req.user.id, 'تم إعادة تعيين كلمة المرور');
-
     logger.info('Password reset by admin', { user_id: req.params.id, by: req.user.id });
 
     res.json({
@@ -282,9 +272,7 @@ router.post('/:id/reset-password', validateUUID(), authenticate, requireRole(...
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// POST /admin/users/:id/block
-// ═══════════════════════════════════════════════════════════
+// ═══ POST /admin/users/:id/block ═══════════════════════
 router.post('/:id/block', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const { reason } = req.body;
@@ -294,7 +282,6 @@ router.post('/:id/block', validateUUID(), authenticate, requireRole(...ADMIN_ROL
 
     const user = await db('users').where({ id: req.params.id }).first();
     if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-
     if (user.blocked_at) return res.status(400).json({ error: 'المستخدم محظور بالفعل' });
     if (user.id === req.user.id) return res.status(400).json({ error: 'لا يمكن حظر نفسك' });
 
@@ -307,16 +294,13 @@ router.post('/:id/block', validateUUID(), authenticate, requireRole(...ADMIN_ROL
     });
 
     await logAction(req.params.id, 'block', req.user.id, reason);
-
     logger.info('User blocked by admin', { user_id: req.params.id, by: req.user.id });
 
     res.json({ ok: true, message: 'تم حظر المستخدم' });
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// POST /admin/users/:id/unblock
-// ═══════════════════════════════════════════════════════════
+// ═══ POST /admin/users/:id/unblock ═════════════════════
 router.post('/:id/unblock', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const user = await db('users').where({ id: req.params.id }).first();
@@ -332,21 +316,17 @@ router.post('/:id/unblock', validateUUID(), authenticate, requireRole(...ADMIN_R
     });
 
     await logAction(req.params.id, 'unblock', req.user.id, 'تم رفع الحظر');
-
     res.json({ ok: true, message: 'تم رفع الحظر' });
   } catch (err) { next(err); }
 });
 
-// ═══════════════════════════════════════════════════════════
-// DELETE /admin/users/:id — soft delete
-// ═══════════════════════════════════════════════════════════
+// ═══ DELETE /admin/users/:id ═══════════════════════════
 router.delete('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES), async (req, res, next) => {
   try {
     const user = await db('users').where({ id: req.params.id }).first();
     if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
     if (user.id === req.user.id) return res.status(400).json({ error: 'لا يمكن حذف نفسك' });
 
-    // Soft delete - mark as deleted but keep data for referential integrity
     await db('users').where({ id: req.params.id }).update({
       is_active: false,
       blocked_at: new Date(),
@@ -358,9 +338,6 @@ router.delete('/:id', validateUUID(), authenticate, requireRole(...ADMIN_ROLES),
     });
 
     await logAction(req.params.id, 'deleted', req.user.id, 'تم الحذف من الإدارة');
-
-    logger.info('User soft-deleted by admin', { user_id: req.params.id, by: req.user.id });
-
     res.json({ ok: true, message: 'تم الحذف' });
   } catch (err) { next(err); }
 });

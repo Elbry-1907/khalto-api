@@ -1,4 +1,4 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+﻿process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 process.env.PGSSLMODE = 'no-verify';
 require('dotenv').config();
 const path = require('path');
@@ -40,6 +40,7 @@ const routeFiles = {
   'admin/kitchens': './routes/admin-kitchens',
   'admin/couriers': './routes/admin-couriers',
   'admin/users-v2': './routes/admin-users',
+  'admin/documents': './routes/admin-documents',
   providers:     './routes/providers',
   countries:     './routes/countries',
   uploads:       './routes/uploads',
@@ -72,6 +73,7 @@ app.set('io', io);
 app.get('/khalto-api-dashboard', (req, res) => res.redirect('/khalto-api-dashboard/'));
 app.get('/khalto-api-dashboard', (req, res) => res.redirect('/khalto-api-dashboard/'));
 app.use('/khalto-api-dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ── Core middleware ───────────────────────────────────────
 app.use(requestId);

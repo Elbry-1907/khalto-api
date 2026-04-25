@@ -631,7 +631,7 @@ Router.register('admin-couriers', {
         if (content) content.innerHTML = this.renderDetailContent();
         if (this.state.detailTab === 'earnings')   this.loadDetailEarnings();
         if (this.state.detailTab === 'deliveries') this.loadDetailDeliveries();
-        if (this.state.detailTab === 'documents')  this.loadDetailDocuments();
+        if (this.state.detailTab === 'documents')  this.loadDocuments();
         if (this.state.detailTab === 'log')        this.loadDetailLog();
       };
     });

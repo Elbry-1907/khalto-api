@@ -59,7 +59,7 @@ const Router = {
       orders: 'الطلبات',
       kitchens: 'المطابخ',
       'admin-kitchens': 'إدارة المطابخ',
-      couriers: 'المندوبين',
+      'admin-couriers': 'إدارة المندوبين',
       customers: 'العملاء',
       settlements: 'التسويات',
       commission: 'العمولات',

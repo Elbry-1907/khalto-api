@@ -258,8 +258,23 @@ const API = {
     toggle(id)                { return API.put(`/admin/kitchens/${id}/toggle`); },
     setCommission(id, pct)    { return API.put(`/admin/kitchens/${id}/commission`, { commission_pct: pct }); },
   },
-
-
+adminCouriers: {
+    list(params)              { return API.get('/admin/couriers', params); },
+    stats()                   { return API.get('/admin/couriers/stats'); },
+    online(params)            { return API.get('/admin/couriers/online', params); },
+    get(id)                   { return API.get(`/admin/couriers/${id}`); },
+    deliveries(id, params)    { return API.get(`/admin/couriers/${id}/deliveries`, params); },
+    earnings(id, params)      { return API.get(`/admin/couriers/${id}/earnings`, params); },
+    statusLog(id)             { return API.get(`/admin/couriers/${id}/status-log`); },
+    create(body)              { return API.post('/admin/couriers', body); },
+    update(id, body)          { return API.put(`/admin/couriers/${id}`, body); },
+    approve(id)               { return API.post(`/admin/couriers/${id}/approve`); },
+    reject(id, reason)        { return API.post(`/admin/couriers/${id}/reject`, { reason }); },
+    suspend(id, reason)       { return API.post(`/admin/couriers/${id}/suspend`, { reason }); },
+    unsuspend(id)             { return API.post(`/admin/couriers/${id}/unsuspend`); },
+    setPercentage(id, pct)    { return API.put(`/admin/couriers/${id}/percentage`, { delivery_percentage: pct }); },
+    setAvailability(id, avail){ return API.put(`/admin/couriers/${id}/availability`, { availability: avail }); },
+  },
 };
 
 window.API = API;

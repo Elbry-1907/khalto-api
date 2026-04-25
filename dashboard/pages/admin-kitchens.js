@@ -539,37 +539,6 @@ Router.register('admin-kitchens', {
     }
   },
 
-  renderDocumentsTab() {
-    return `<div id="ak-documents-loading">${Utils.loadingHTML()}</div>`;
-  },
-
-  async loadDetailDocuments() {
-    try {
-      const { documents } = await API.adminDocuments.listForKitchen(this.state.selectedKitchen.id);
-      const wrap = document.getElementById('ak-documents-loading');
-      if (!wrap) return;
-      if (!documents || documents.length === 0) {
-        wrap.innerHTML = Utils.emptyHTML('لا توجد مستندات', '', '📷');
-        return;
-      }
-      wrap.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-top:12px;">
-          ${documents.map(d => `
-            <div style="border:1px solid var(--border); border-radius:6px; overflow:hidden; cursor:pointer;" onclick="window.open('${Utils.escape(d.file_url || '')}', '_blank')">
-              <img src="${Utils.escape(d.file_url || '')}" style="width:100%; height:120px; object-fit:cover; background:#f0f0f0;" alt="${Utils.escape(d.document_type || '')}">
-              <div style="padding:8px; font-size:12px; text-align:center;">
-                <div class="text-sm">${Utils.escape(d.document_type || 'مستند')}</div>
-                <div class="text-xs text-muted">${Utils.timeAgo(d.uploaded_at)}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    } catch (err) {
-      const wrap = document.getElementById('ak-documents-loading');
-      if (wrap) wrap.innerHTML = Utils.errorHTML(err.message);
-    }
-  },
 
   renderLogTab() {
     return `<div id="ak-log-loading">${Utils.loadingHTML()}</div>`;
